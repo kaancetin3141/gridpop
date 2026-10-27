@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gridpop/audio/audio_manager.dart';
+import 'package:gridpop/core/constants/app_strings.dart';
 import 'package:gridpop/core/constants/piece_catalog.dart';
 import 'package:gridpop/core/constants/storage_keys.dart';
 import 'package:gridpop/core/theme/app_colors.dart';
@@ -154,6 +155,24 @@ void main() {
       expect(VisualStyle.fromStorage(''), VisualStyle.aurora);
       expect(VisualStyle.fromStorage('../neon'), VisualStyle.aurora);
       expect(VisualStyle.fromStorage('AURORA'), VisualStyle.aurora);
+    });
+
+    test('every style has an English and a Turkish label and hint', () {
+      for (final VisualStyle style in VisualStyle.values) {
+        for (final String code in <String>['en', 'tr']) {
+          final AppStrings strings = AppStrings.ofLanguage(code);
+          expect(
+            strings.t(style.labelKey),
+            isNot(style.labelKey),
+            reason: '${style.name} needs a $code label',
+          );
+          expect(
+            strings.t(style.hintKey),
+            isNot(style.hintKey),
+            reason: '${style.name} needs a $code hint',
+          );
+        }
+      }
     });
 
     test('each style picks its own block material', () {
