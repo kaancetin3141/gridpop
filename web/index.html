@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="description" content="GridPop - an original block placement puzzle. Pop the grid, chase the combo.">
+  <meta name="theme-color" content="#4B3FD6">
+  <!-- The game is fully offline: no third party origin, no analytics, no ads.
+       A strict content policy keeps it that way even if HTML were injected. -->
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' data: blob:; connect-src 'self' data: blob:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'none'">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="GridPop">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>GridPop</title>
+  <link rel="manifest" href="manifest.json">
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background-color: #120F28;
+      overscroll-behavior: none;
+    }
+    /* Shown until the Flutter engine takes over. */
+    #gridpop-boot {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #3B2FB8 0%, #6B3BEF 55%, #9B3FE0 100%);
+      transition: opacity 240ms ease;
+      z-index: 10;
+    }
+    #gridpop-boot.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .mark {
+      width: 96px;
+      height: 96px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      animation: pop 1.4s ease-in-out infinite;
+    }
+    .block {
+      border-radius: 14px;
+      box-shadow: 0 6px 0 rgba(0, 0, 0, 0.18), inset 0 6px 10px rgba(255, 255, 255, 0.28);
+    }
+    .b1 { background: linear-gradient(180deg, #BBA4FF, #8B6BF5); }
+    .b2 { background: linear-gradient(180deg, #8CD8FF, #3FBDF5); }
+    .b3 { background: linear-gradient(180deg, #7FEBCB, #2FD6A8); }
+    .b4 {
+      background: linear-gradient(180deg, #FFE79B, #FFD34E);
+      transform: translate(18px, -18px);
+    }
+    @keyframes pop {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.04); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .mark { animation: none; }
+    }
+  </style>
+</head>
+<body>
+  <div id="gridpop-boot">
+    <div class="mark">
+      <div class="block b1"></div>
+      <div class="block b2"></div>
+      <div class="block b3"></div>
+      <div class="block b4"></div>
+    </div>
+  </div>
+  <script src="flutter_bootstrap.js" async></script>
+  <script>
+    window.addEventListener('flutter-first-frame', function () {
+      var boot = document.getElementById('gridpop-boot');
+      if (!boot) { return; }
+      boot.classList.add('hidden');
+      setTimeout(function () { boot.remove(); }, 260);
+    });
+  </script>
+</body>
+</html>
