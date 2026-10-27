@@ -1,4 +1,4 @@
-import 'dart:ui' as ui;
+﻿import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
@@ -278,8 +278,9 @@ class BlockPainter {
       Paint()..color = Colors.black.withOpacity(0.16 * alpha),
     );
 
-    // Pastel face: pulled towards white so the ink outline stays readable.
-    final Color face = Color.lerp(color.base, Colors.white, 0.14)!;
+    // Pastel face: pulled towards white so the ink outline stays readable,
+    // but only slightly - a matte print must not look lit from inside.
+    final Color face = Color.lerp(color.base, Colors.white, 0.09)!;
     canvas.drawRRect(body, Paint()..color = face.withOpacity(alpha));
 
     // Ink rim, drawn inside so neighbouring tiles never touch.
@@ -296,14 +297,14 @@ class BlockPainter {
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromLTWH(
-          rect.left + rect.width * 0.12,
-          rect.top + rect.height * 0.12,
-          rect.width * 0.76,
-          rect.height * 0.10,
+          rect.left + rect.width * 0.14,
+          rect.top + rect.height * 0.11,
+          rect.width * 0.72,
+          rect.height * 0.07,
         ),
-        Radius.circular(rect.height * 0.05),
+        Radius.circular(rect.height * 0.035),
       ),
-      Paint()..color = Colors.white.withOpacity(0.22 * alpha),
+      Paint()..color = Colors.white.withOpacity(0.13 * alpha),
     );
   }
 

@@ -104,7 +104,12 @@ class _AppBackgroundState extends State<AppBackground>
               if (palette.blooms && widget.blooms)
                 IgnorePointer(child: CustomPaint(painter: _StagePainter(palette))),
               if (!palette.blooms)
-                IgnorePointer(child: CustomPaint(painter: _FlatStagePainter(palette))),
+                IgnorePointer(
+                  // The flat styles always get their accent glow; the aurora
+                  // style only loses it when the screen asked for a quiet
+                  // stage, which is why the glow is not unconditional here.
+                  child: CustomPaint(painter: _FlatStagePainter(palette)),
+                ),
               widget.child,
             ],
           ),
@@ -153,38 +158,41 @@ class _StagePainter extends CustomPainter {
     }
 
     final double shortest = size.shortestSide;
+    // Blooms are light on a dark stage, but muddy on a pale one, so the light
+    // theme gets a much fainter version of the same composition.
+    final double k = palette.isDark ? 1 : 0.38;
     bloom(
       Offset(size.width * 0.18, size.height * 0.08),
       shortest * 0.55,
       palette.accent,
-      0.26,
+      0.26 * k,
     );
     bloom(
       Offset(size.width * 0.92, size.height * 0.22),
       shortest * 0.48,
       AppColors.magenta,
-      0.18,
+      0.18 * k,
     );
     bloom(
       Offset(size.width * 0.6, size.height * 0.95),
       shortest * 0.6,
       AppColors.sky,
-      0.16,
+      0.16 * k,
     );
     bloom(
       Offset(size.width * 0.15, size.height * 0.72),
       shortest * 0.42,
       AppColors.mint,
-      0.10,
+      0.10 * k,
     );
     bloom(
       Offset(size.width * 0.85, size.height * 0.75),
       shortest * 0.40,
       AppColors.amber,
-      0.10,
+      0.10 * k,
     );
 
-    _vignette(canvas, size);
+    _vignette(canvas, size, strength: palette.isDark ? 0.16 : 0.05);
 
     // Static sparkle field: tiny deterministic dots that give the gradient a
     // premium, printed-foil texture. Deterministic so it never shimmers
@@ -226,9 +234,19 @@ class _FlatStagePainter extends CustomPainter {
     if (palette.style == VisualStyle.matte) {
       _paintGrain(canvas, size);
     }
-    _vignette(canvas, size, strength: spec.scanlines ? 0.26 : 0.12);
 
-    // A single accent bloom keeps the flat stages from looking dead.
+    _vignette(
+      canvas,
+      size,
+      strength: palette.isDark ? (spec.scanlines ? 0.26 : 0.12) : 0.05,
+    );
+
+    // A single accent bloom keeps the flat styles from looking dead. Aurora only
+    // reaches this painter when the screen disabled its blooms, so the glow
+    // stays off there.
+    if (palette.blooms) {
+      return;
+    }
     canvas.drawCircle(
       Offset(size.width * 0.5, -size.height * 0.05),
       size.shortestSide * 0.9,

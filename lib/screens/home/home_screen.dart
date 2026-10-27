@@ -345,12 +345,17 @@ class _StatChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AppPalette palette = AppPalette.of(context);
+    // Dark stage: the candy hue is the text colour. Light stage: the same hue
+    // is tinted into the fill, and the ink version carries the text, otherwise
+    // amber on beige would be unreadable.
+    final Color ink = palette.isDark ? color : AppColors.ink(color);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: palette.isDark ? 0.12 : 0.18),
         borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: color.withOpacity(0.24)),
+        border: Border.all(color: ink.withValues(alpha: 0.32)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -360,13 +365,13 @@ class _StatChip extends StatelessWidget {
             style: Theme.of(context)
                 .textTheme
                 .labelSmall
-                ?.copyWith(color: color, letterSpacing: 0.6),
+                ?.copyWith(color: ink, letterSpacing: 0.6),
           ),
           const SizedBox(height: 2),
           Text(
             value,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: color,
+                  color: ink,
                   fontWeight: FontWeight.w800,
                 ),
           ),

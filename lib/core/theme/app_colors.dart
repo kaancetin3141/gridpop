@@ -68,6 +68,11 @@ class AppColors {
   static const Color darkText = Color(0xFFF4F1FF);
   static const Color darkTextMuted = Color(0xFFA69ED6);
 
+  /// Darkens a candy hue so it stays legible on a light surface. Used by
+  /// chips and badges, which are tinted pastel in light mode.
+  static Color ink(Color color, {double amount = 0.58}) =>
+      Color.lerp(color, const Color(0xFF1A1030), amount)!;
+
   // Semantic -------------------------------------------------------------
   static const Color success = Color(0xFF2FCB8C);
   static const Color danger = Color(0xFFFF5C7A);
