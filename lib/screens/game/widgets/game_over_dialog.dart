@@ -208,52 +208,100 @@ class _SummaryGrid extends StatelessWidget {
     final AppPalette palette = AppPalette.of(context);
     final AppStrings strings = AppStrings.of(context);
 
-    Widget cell(String label, String value, Color color) {
-      return Expanded(
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 3),
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.10),
-            borderRadius: BorderRadius.circular(AppRadius.md),
-          ),
-          child: Column(
-            children: <Widget>[
-              Text(
-                value,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: color,
-                      fontWeight: FontWeight.w800,
+    /// One summary tile: icon, label, value. The value is scaled down rather
+    /// than wrapped, so a long play time ("12m 04s") never breaks the grid.
+    Widget cell(String label, String value, Color color, IconData icon) {
+      final Color ink = palette.isDark ? color : AppColors.ink(color);
+      return Container(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: palette.isDark ? 0.10 : 0.16),
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(color: ink.withValues(alpha: 0.16)),
+        ),
+        child: Row(
+          children: <Widget>[
+            Icon(icon, size: 18, color: ink),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context)
+                        .textTheme
+                        .labelSmall
+                        ?.copyWith(color: palette.textMuted),
+                  ),
+                  const SizedBox(height: 1),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      value,
+                      maxLines: 1,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: ink,
+                            fontWeight: FontWeight.w800,
+                          ),
                     ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 2),
-              Text(
-                label,
-                textAlign: TextAlign.center,
-                style: Theme.of(context)
-                    .textTheme
-                    .labelSmall
-                    ?.copyWith(color: palette.textMuted),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       );
     }
 
-    return Row(
+    return Column(
       children: <Widget>[
-        cell(
-          strings.t('game.best'),
-          ScoreFormat.number(summary.previousBest),
-          AppColors.amber,
+        Row(
+          children: <Widget>[
+            Expanded(
+              child: cell(
+                strings.t('game.best'),
+                ScoreFormat.number(summary.previousBest),
+                AppColors.amber,
+                Icons.emoji_events_rounded,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: cell(
+                strings.t('game.combo'),
+                'x${summary.bestCombo}',
+                AppColors.magenta,
+                Icons.local_fire_department_rounded,
+              ),
+            ),
+          ],
         ),
-        cell(strings.t('game.combo'), 'x${summary.bestCombo}', AppColors.magenta),
-        cell(strings.t('score.lines'), '${summary.linesCleared}', AppColors.mint),
-        cell(
-          strings.t('stats.playTime'),
-          ScoreFormat.duration(Duration(seconds: summary.playSeconds)),
-          AppColors.sky,
+        const SizedBox(height: 8),
+        Row(
+          children: <Widget>[
+            Expanded(
+              child: cell(
+                strings.t('score.lines'),
+                '${summary.linesCleared}',
+                AppColors.mint,
+                Icons.stacked_line_chart_rounded,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: cell(
+                strings.t('stats.playTime'),
+                ScoreFormat.duration(Duration(seconds: summary.playSeconds)),
+                AppColors.sky,
+                Icons.timer_outlined,
+              ),
+            ),
+          ],
         ),
       ],
     );

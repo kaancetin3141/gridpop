@@ -470,6 +470,13 @@ void _onTick(Duration elapsed) {
         final double trayHeight =
             trayOnSide ? trayExtent : area.height - boardSide - gap;
 
+        // The slot cards are square, so the shelf never needs more height than
+        // one slot plus its padding. Any extra height becomes symmetric
+        // breathing room around the board instead of a hollow card.
+        final double slotSide = math.max(0, (area.width - 40) / 3);
+        final double dockHeight =
+            trayOnSide ? trayHeight : math.min(trayHeight, slotSide + 18);
+
         final Size boardArea = trayOnSide
             ? Size(area.width - trayExtent - gap, area.height)
             : Size(boardSide, boardSide);
@@ -557,7 +564,7 @@ final Widget boardStack = AnimatedScale(
         );
 
         final Widget tray = SizedBox(
-          height: trayOnSide ? null : trayHeight,
+          height: trayOnSide ? null : dockHeight,
           width: trayOnSide ? trayExtent : null,
           child: PieceTray(
             controller: _controller,
@@ -585,10 +592,11 @@ final Widget boardStack = AnimatedScale(
                   ],
                 )
               : Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
                     Center(child: boardStack),
                     const SizedBox(height: gap),
-                    tray,
+                    Center(child: tray),
                   ],
                 ),
         );
