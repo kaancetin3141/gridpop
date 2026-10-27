@@ -1,4 +1,21 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+
+/// Shared motion helpers.
+///
+/// Every animation in GridPop checks [reduce] first: when the platform asks for
+/// reduced motion (accessibility setting, low power mode) the UI still shows the
+/// final state, it just gets there without moving.
+class Motion {
+  const Motion._();
+
+  /// True when the host asked the app to avoid motion.
+  static bool reduce(BuildContext context) =>
+      MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+
+  /// [duration] when motion is allowed, [Duration.zero] otherwise.
+  static Duration scale(BuildContext context, Duration duration) =>
+      reduce(context) ? Duration.zero : duration;
+}
 
 /// Wraps a widget with a springy press animation. Used by every button in the
 /// game so the whole UI reacts the same way.
@@ -9,6 +26,7 @@ class Pressable extends StatefulWidget {
     this.onTap,
     this.onLongPress,
     this.pressedScale = 0.94,
+    this.hoverScale = 1.015,
     this.enabled = true,
     this.behavior = HitTestBehavior.opaque,
   });
@@ -17,6 +35,10 @@ class Pressable extends StatefulWidget {
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
   final double pressedScale;
+
+  /// Pointer hover lift, used on web and desktop where the cursor exists.
+  final double hoverScale;
+
   final bool enabled;
   final HitTestBehavior behavior;
 
@@ -26,6 +48,7 @@ class Pressable extends StatefulWidget {
 
 class _PressableState extends State<Pressable> {
   bool _pressed = false;
+  bool _hovered = false;
 
   void _setPressed(bool value) {
     if (_pressed == value || !mounted) {
@@ -34,21 +57,43 @@ class _PressableState extends State<Pressable> {
     setState(() => _pressed = value);
   }
 
+  void _setHovered(bool value) {
+    if (_hovered == value || !mounted) {
+      return;
+    }
+    setState(() => _hovered = value);
+  }
+
   @override
   Widget build(BuildContext context) {
     final bool active = widget.enabled && widget.onTap != null;
-    return GestureDetector(
-      behavior: widget.behavior,
-      onTap: active ? widget.onTap : null,
-      onLongPress: active ? widget.onLongPress : null,
-      onTapDown: active ? (_) => _setPressed(true) : null,
-      onTapUp: active ? (_) => _setPressed(false) : null,
-      onTapCancel: active ? () => _setPressed(false) : null,
-      child: AnimatedScale(
-        scale: _pressed ? widget.pressedScale : 1,
-        duration: const Duration(milliseconds: 110),
-        curve: Curves.easeOut,
-        child: widget.child,
+    final bool reduce = Motion.reduce(context);
+    final double scale = !widget.enabled
+        ? 1
+        : _pressed
+            ? widget.pressedScale
+            : _hovered
+                ? widget.hoverScale
+                : 1;
+    return MouseRegion(
+      cursor: active ? SystemMouseCursors.click : MouseCursor.defer,
+      onEnter: active && !reduce ? (_) => _setHovered(true) : null,
+      onExit: active ? (_) => _setHovered(false) : null,
+      child: GestureDetector(
+        behavior: widget.behavior,
+        onTap: active ? widget.onTap : null,
+        onLongPress: active ? widget.onLongPress : null,
+        onTapDown: active ? (_) => _setPressed(true) : null,
+        onTapUp: active ? (_) => _setPressed(false) : null,
+        onTapCancel: active ? () => _setPressed(false) : null,
+        child: AnimatedScale(
+          scale: scale,
+          duration: reduce
+              ? Duration.zero
+              : const Duration(milliseconds: 110),
+          curve: Curves.easeOut,
+          child: widget.child,
+        ),
       ),
     );
   }
@@ -63,12 +108,14 @@ class PopIn extends StatefulWidget {
     this.delay = Duration.zero,
     this.offset = const Offset(0, 0.12),
     this.scale = 0.92,
+    this.curve = Curves.easeOutCubic,
   });
 
   final Widget child;
   final Duration delay;
   final Offset offset;
   final double scale;
+  final Curve curve;
 
   @override
   State<PopIn> createState() => _PopInState();
@@ -80,9 +127,20 @@ class _PopInState extends State<PopIn> with SingleTickerProviderStateMixin {
     duration: const Duration(milliseconds: 420),
   );
 
+  bool _started = false;
+
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) {
+      return;
+    }
+    _started = true;
+    // Reduced motion: show the final pose immediately, never animate.
+    if (Motion.reduce(context)) {
+      _controller.value = 1;
+      return;
+    }
     if (widget.delay == Duration.zero) {
       _controller.forward();
     } else {
@@ -104,7 +162,7 @@ class _PopInState extends State<PopIn> with SingleTickerProviderStateMixin {
   Widget build(BuildContext context) {
     final CurvedAnimation curve = CurvedAnimation(
       parent: _controller,
-      curve: Curves.easeOutCubic,
+      curve: widget.curve,
     );
     return AnimatedBuilder(
       animation: curve,
@@ -163,6 +221,12 @@ class _CountUpTextState extends State<CountUpText>
   void didUpdateWidget(CountUpText oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.value == widget.value) {
+      return;
+    }
+    if (Motion.reduce(context)) {
+      _from = widget.value;
+      _displayed = widget.value;
+      _controller.stop();
       return;
     }
     _from = _displayed;

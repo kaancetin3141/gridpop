@@ -10,6 +10,33 @@ columns, grow the combo multiplier and chase the high score.
 
 ---
 
+## Screenshots
+
+<p align="center">
+  <img src="docs/screenshots/home.png" width="240" alt="Main menu: best score, games, streak and coins">
+  <img src="docs/screenshots/game.png" width="240" alt="Classic run: board, tray and power bar">
+  <img src="docs/screenshots/daily.png" width="240" alt="Daily Challenge with the seven day streak ladder">
+</p>
+<p align="center">
+  <img src="docs/screenshots/shop.png" width="240" alt="Shop with power-ups and a rewarded ad">
+  <img src="docs/screenshots/achievements.png" width="240" alt="Achievement badges with progress">
+</p>
+
+The images are rendered by the real widget tree at phone resolution with the
+bundled Roboto faces — no mockups. Regenerate them after a UI change:
+
+```bash
+# PowerShell
+$env:SHOWCASE = "1"; flutter test test/showcase_test.dart --update-goldens
+# bash
+SHOWCASE=1 flutter test test/showcase_test.dart --update-goldens
+```
+
+`test/showcase_test.dart` is skipped in a normal `flutter test` run, so the
+gallery never breaks CI.
+
+---
+
 ## 1. Game identity
 
 | | |
@@ -395,6 +422,8 @@ flutter test
 | `test/audit_test.dart` | full function audit: date keys, storage, stats, daily streak/prune/ladder, leaderboard ranks, achievements, wallet, inventory, settings reset, pure logic, revive/smash tools, controller guards |
 | `test/security_test.dart` | penetration tests: hostile primitives, forged economy/leaderboard/daily/achievements/settings, injection strings, oversized payloads, gameplay fuzzing, double finish |
 | `test/widget_test.dart` | screens render on 360x640, 640x360, 768x1024, 1024x768, 1440x900, plus geometry, effects, shop, achievements, the power bar, the revive sheet and hammer aiming |
+| `test/style_test.dart` | visual styles: storage round trips, tampered-value fallback, block material mapping, theme extension wiring, painter smoke test for all four styles, settings picker widget test |
+| `test/showcase_test.dart` | README gallery generator; skipped unless `SHOWCASE=1`, then rewrites `docs/screenshots/*.png` (including the four style variants) |
 
 ---
 
@@ -403,7 +432,8 @@ flutter test
 **V1 — shipped**
 
 Classic, score, high score, combo, animations, save system, Daily Challenge,
-Time Attack, Zen, leaderboard, statistics, themes, EN/TR, achievements,
+Time Attack, Zen, leaderboard, statistics, themes, four visual styles
+(Aurora, Neon, Matte, Retro), EN/TR, achievements,
 coin economy, shop with power-ups (fresh blocks, clear board, booster, hammer,
 bomb), second chance revive, daily streak ladder, score surge.
 
@@ -439,4 +469,63 @@ Ad SDK with rewarded ads, premium cosmetics, in-app purchases.
 | Coins | The coin pill pops whenever the balance changes |
 | Logo | Four blocks drop in and the pop block springs out (`LogoMark(animate: true)`) |
 | Game over | Board dims, dialog springs in with score, stars, summary and confetti on a record |
-| Button press | Uniform scale on every interactive element |
+| Button press | Uniform scale on every interactive element, plus a 1.5% hover lift on web and desktop |
+| Board entrance | The board slides up and fades in once per run (transform only, so drag maths stays exact) |
+| Style swap | A short accent flash on the stage marks the new art direction |
+| Reduced motion | `MediaQuery.disableAnimations` short circuits press, pop-in, count-up and the style flash; every animation still ends on its final pose |
+
+---
+
+## 10. Visual styles
+
+GridPop ships four complete art directions. A style is not a colour filter: it
+swaps the stage gradient, the board well, the socket shape, the block material
+and the stage decoration in one go, and the choice is saved with the profile.
+
+| Style | Stage | Blocks |
+|---|---|---|
+| **Aurora** (default) | Indigo aurora gradient, colour blooms, printed foil sparkle | Glossy toy cubes: bevel, bottom lip, specular highlight, cast shadow |
+| **Neon** | Near-black cabinet, perspective grid floor, one accent bloom | Flat glowing tubes with a blurred bloom and a hot rim |
+| **Matte** | Warm studio brown, paper grain, no blooms | Flat pastel faces, ink outline, a single contact shadow |
+| **Retro** | Teal CRT with scanlines and a heavier vignette | Square pixels, chunky bevel, quantised shading, no blur |
+
+<p align="center">
+  <img src="docs/screenshots/game.png" width="200" alt="Aurora style: glossy candy blocks on an indigo stage">
+  <img src="docs/screenshots/game-neon.png" width="200" alt="Neon style: glowing tiles on a dark arcade cabinet">
+  <img src="docs/screenshots/game-matte.png" width="200" alt="Matte style: flat pastel tiles on a warm studio stage">
+  <img src="docs/screenshots/game-retro.png" width="200" alt="Retro style: pixel blocks on a teal CRT stage">
+</p>
+<p align="center">
+  <img src="docs/screenshots/settings.png" width="240" alt="Settings: theme, the visual style picker with four live swatches, and language">
+</p>
+
+The same mid-run position in all four styles, plus the picker that switches
+between them (each swatch is painted by the real block painter, not an image).
+
+### How it is wired
+
+- `VisualStyle` (`lib/core/theme/visual_style.dart`) lists the four families.
+  Each one owns a `VisualStyleSpec` with a dark and a light `StylePalette` plus
+  the decoration flags `blooms`, `gridFloor` and `scanlines`.
+- `AppTheme.light(style:)` / `AppTheme.dark(style:)` resolve that palette and
+  register it on the theme as `GridPopTheme`, a `ThemeExtension`. A style switch
+  is therefore a plain theme change: every widget that reads
+  `AppPalette.of(context)` rebuilds, and the game state is never touched.
+- The extension lerps discretely (nearest side wins) so theme animation can never
+  blend two art directions into mud.
+- `BlockStyle` is separate from `VisualStyle` so the logo can keep the soft
+  material while the board uses another one. `BlockPainter` has one paint path
+  per material, and the board, ghost preview, tray, how-to-play gallery, effects
+  layer and settings swatches all pass the active style through.
+- The picker lives in **Settings -> Appearance -> Visual style** and persists to
+  `gridpop.visualStyle`; an unknown stored value falls back to Aurora.
+
+---
+
+## 11. License
+
+GridPop is released under the [MIT License](LICENSE) — copyright (c) 2026
+kaancetin3141. Use it, fork it, ship it, just keep the notice.
+
+The bundled Roboto font is Apache-2.0; its licence ships in
+[`assets/fonts/ROBOTO_LICENSE.txt`](assets/fonts/ROBOTO_LICENSE.txt).

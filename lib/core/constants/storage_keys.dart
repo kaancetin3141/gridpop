@@ -20,6 +20,9 @@ class StorageKeys {
   static const String vibrationEnabled = '${prefix}vibrationEnabled';
   static const String themeMode = '${prefix}themeMode';
   static const String languageCode = '${prefix}languageCode';
+
+  /// One of `VisualStyle` (aurora, neon, matte, retro).
+  static const String visualStyle = '${prefix}visualStyle';
   static const String boardSize = '${prefix}boardSize';
   static const String showGhost = '${prefix}showGhost';
   static const String showHints = '${prefix}showHints';

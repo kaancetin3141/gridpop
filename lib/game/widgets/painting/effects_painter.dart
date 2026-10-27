@@ -7,6 +7,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/grid_geometry.dart';
 import '../../models/grid_position.dart';
 import '../../models/placement_outcome.dart';
+import '../../../core/theme/visual_style.dart';
 import 'block_painter.dart';
 import '../effects/effects_layer.dart';
 
@@ -18,11 +19,13 @@ class EffectsPainter extends CustomPainter {
   EffectsPainter({
     required this.effects,
     required this.geometry,
+    this.blockStyle = BlockStyle.soft,
     required Listenable repaint,
   }) : super(repaint: repaint);
 
   final GameEffects effects;
   final BoardGeometry geometry;
+  final BlockStyle blockStyle;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -179,6 +182,7 @@ class EffectsPainter extends CustomPainter {
         effects.colorFor(hint.colorIndex),
         alpha: alpha,
         ghost: true,
+        style: blockStyle,
       );
     }
   }
@@ -210,6 +214,7 @@ class EffectsPainter extends CustomPainter {
         effects.colorFor(entry.cell.colorIndex),
         scale: (scale * frozen).clamp(0.2, 1.3),
         alpha: t < 0.2 ? t / 0.2 : 1,
+        style: blockStyle,
       );
     }
   }
@@ -255,7 +260,8 @@ class EffectsPainter extends CustomPainter {
       final Rect rect = geometry.cellRect(position.row, position.col);
       final RRect rrect = RRect.fromRectAndRadius(
         rect,
-        Radius.circular(BlockPainter.radiusFor(rect.shortestSide)),
+        Radius.circular(
+            BlockPainter.radiusFor(rect.shortestSide, style: blockStyle)),
       );
       canvas.drawRRect(
         rrect,
@@ -330,6 +336,7 @@ class EffectsPainter extends CustomPainter {
         effects.colorFor(cell.colorIndex),
         scale: 1 + grow,
         alpha: alpha,
+        style: blockStyle,
       );
       // White hot core while the cell is flashing.
       if (localT < 0.35) {
@@ -647,5 +654,7 @@ class EffectsPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(EffectsPainter oldDelegate) =>
-      oldDelegate.effects != effects || oldDelegate.geometry != geometry;
+      oldDelegate.effects != effects ||
+      oldDelegate.geometry != geometry ||
+      oldDelegate.blockStyle != blockStyle;
 }

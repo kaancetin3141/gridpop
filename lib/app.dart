@@ -31,8 +31,8 @@ class _GridPopAppState extends State<GridPopApp> {
           return MaterialApp(
             title: 'GridPop',
             debugShowCheckedModeBanner: false,
-            theme: AppTheme.light(),
-            darkTheme: AppTheme.dark(),
+            theme: AppTheme.light(style: settings.visualStyle),
+            darkTheme: AppTheme.dark(style: settings.visualStyle),
             themeMode: settings.themeMode,
             locale: settings.locale,
             localizationsDelegates: const <LocalizationsDelegate<Object>>[

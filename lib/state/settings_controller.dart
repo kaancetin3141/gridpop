@@ -4,6 +4,7 @@ import '../audio/audio_manager.dart';
 import '../core/constants/app_constants.dart';
 import '../core/constants/app_strings.dart';
 import '../core/constants/storage_keys.dart';
+import '../core/theme/visual_style.dart';
 import '../game/services/haptics_service.dart';
 import '../storage/storage_manager.dart';
 
@@ -35,6 +36,7 @@ class SettingsController extends ChangeNotifier {
   int _boardSize = BoardConfig.defaultSize;
   String _languageCode = 'en';
   ThemeMode _themeMode = ThemeMode.system;
+  VisualStyle _visualStyle = VisualStyle.aurora;
 
   bool get soundEnabled => _soundEnabled;
 
@@ -54,6 +56,10 @@ class SettingsController extends ChangeNotifier {
 
   ThemeMode get themeMode => _themeMode;
 
+  /// Active art direction. Changing it swaps every stage colour and block
+  /// material at once, without touching game state.
+  VisualStyle get visualStyle => _visualStyle;
+
   bool get usesCustomBoardSize => _boardSize != BoardConfig.defaultSize;
 
   void _load() {
@@ -71,6 +77,9 @@ class SettingsController extends ChangeNotifier {
     );
     final String? theme = _storage.getString(StorageKeys.themeMode);
     _themeMode = _themeModeFromStorage(theme);
+    _visualStyle = VisualStyle.fromStorage(
+      _storage.getString(StorageKeys.visualStyle),
+    );
   }
 
   void _pushToServices() {
@@ -178,6 +187,13 @@ class SettingsController extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setVisualStyle(VisualStyle style) {
+    if (_visualStyle == style) return;
+    _visualStyle = style;
+    _storage.setString(StorageKeys.visualStyle, style.storageKey);
+    notifyListeners();
+  }
+
   /// Restores every preference to its default.
   Future<void> resetToDefaults() async {
     _soundEnabled = true;
@@ -188,6 +204,7 @@ class SettingsController extends ChangeNotifier {
     _boardSize = BoardConfig.defaultSize;
     _languageCode = 'en';
     _themeMode = ThemeMode.system;
+    _visualStyle = VisualStyle.aurora;
     await Future.wait<void>(<Future<void>>[
       _storage.setBool(StorageKeys.soundEnabled, true),
       _storage.setBool(StorageKeys.musicEnabled, true),
@@ -197,6 +214,7 @@ class SettingsController extends ChangeNotifier {
       _storage.setInt(StorageKeys.boardSize, BoardConfig.defaultSize),
       _storage.setString(StorageKeys.languageCode, 'en'),
       _storage.setString(StorageKeys.themeMode, themeModeToStorage(ThemeMode.system)),
+      _storage.setString(StorageKeys.visualStyle, VisualStyle.aurora.storageKey),
     ]);
     _pushToServices();
     notifyListeners();

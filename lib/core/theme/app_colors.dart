@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 
+import 'visual_style.dart';
+
 /// GridPop brand colours.
 ///
 /// Identity: "Aurora Pop" - a deep indigo stage lit by candy coloured blocks.
+/// The constants below are the brand anchors used by logos and effects; the
+/// per style stage colours live in [VisualStyleSpec].
 class AppColors {
   const AppColors._();
 
@@ -22,7 +26,7 @@ class AppColors {
   static const Color coral = Color(0xFFFF6B6B);
   static const Color amber = Color(0xFFFFB020);
 
-  /// Background gradient stops (used on every screen shell).
+  /// Background gradient stops of the default (aurora) style.
   static const List<Color> auroraGradient = <Color>[
     Color(0xFF3B2FB8),
     Color(0xFF6B3BEF),
@@ -73,7 +77,7 @@ class AppColors {
   static const Color starIdle = Color(0x33FFFFFF);
 }
 
-/// Colour roles resolved from the active [ThemeData].
+/// Colour roles resolved from the active [ThemeData] and visual style.
 class AppPalette {
   const AppPalette({
     required this.background,
@@ -86,37 +90,42 @@ class AppPalette {
     required this.text,
     required this.textMuted,
     required this.isDark,
+    required this.accent,
+    required this.style,
+    required this.spec,
   });
 
-  /// Builds the palette for [context].
-  factory AppPalette.of(BuildContext context) {
-    final bool isDark = Theme.of(context).brightness == Brightness.dark;
-    if (isDark) {
-      return const AppPalette(
-        background: AppColors.darkBackground,
-        backgroundGradient: AppColors.auroraGradientDark,
-        surface: AppColors.darkSurface,
-        surfaceAlt: AppColors.darkSurfaceAlt,
-        board: AppColors.darkBoard,
-        cell: AppColors.darkCell,
-        outline: AppColors.darkOutline,
-        text: AppColors.darkText,
-        textMuted: AppColors.darkTextMuted,
-        isDark: true,
-      );
-    }
-    return const AppPalette(
-      background: AppColors.lightBackground,
-      backgroundGradient: AppColors.auroraGradientSoft,
-      surface: AppColors.lightSurface,
-      surfaceAlt: AppColors.lightSurfaceAlt,
-      board: AppColors.lightBoard,
-      cell: AppColors.lightCell,
-      outline: AppColors.lightOutline,
-      text: AppColors.lightText,
-      textMuted: AppColors.lightTextMuted,
-      isDark: false,
+  /// Resolves the stage colours of [style] for [brightness].
+  factory AppPalette.build(VisualStyle style, Brightness brightness) {
+    final VisualStyleSpec spec = VisualStyleSpec.of(style);
+    final StylePalette colors = spec.palette(brightness);
+    return AppPalette(
+      background: colors.background,
+      backgroundGradient: colors.gradient,
+      surface: colors.surface,
+      surfaceAlt: colors.surfaceAlt,
+      board: colors.board,
+      cell: colors.cell,
+      outline: colors.outline,
+      text: colors.text,
+      textMuted: colors.textMuted,
+      isDark: brightness == Brightness.dark,
+      accent: colors.accent,
+      style: style,
+      spec: spec,
     );
+  }
+
+  /// Builds the palette for [context], following the style registered on the
+  /// theme. Falls back to the default style when no theme extension is present
+  /// (bare `MaterialApp` in tests, golden tools).
+  factory AppPalette.of(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final GridPopTheme? registered = theme.extension<GridPopTheme>();
+    if (registered != null) {
+      return registered.palette;
+    }
+    return AppPalette.build(VisualStyle.aurora, theme.brightness);
   }
 
   final Color background;
@@ -129,4 +138,65 @@ class AppPalette {
   final Color text;
   final Color textMuted;
   final bool isDark;
+
+  /// Style accent: focus rings, selection and highlights.
+  final Color accent;
+
+  final VisualStyle style;
+  final VisualStyleSpec spec;
+
+  /// How blocks are drawn in this style.
+  BlockStyle get blockStyle => style.block;
+
+  /// True when the stage should draw its colour blooms.
+  bool get blooms => spec.blooms;
+
+  /// True when the stage should draw an arcade grid floor.
+  bool get gridFloor => spec.gridFloor;
+
+  /// True when the stage should draw CRT scanlines.
+  bool get scanlines => spec.scanlines;
+
+  AppPalette copyWith({
+    VisualStyle? style,
+    Brightness? brightness,
+  }) =>
+      AppPalette.build(
+        style ?? this.style,
+        brightness ?? (isDark ? Brightness.dark : Brightness.light),
+      );
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is AppPalette &&
+          other.style == style &&
+          other.isDark == isDark &&
+          other.accent == accent;
+
+  @override
+  int get hashCode => Object.hash(style, isDark, accent);
+}
+
+/// Carries the resolved [AppPalette] through [ThemeData], so a style change is
+/// a plain theme change and every widget depending on `Theme.of` rebuilds.
+@immutable
+class GridPopTheme extends ThemeExtension<GridPopTheme> {
+  const GridPopTheme({required this.palette});
+
+  final AppPalette palette;
+
+  @override
+  GridPopTheme copyWith({AppPalette? palette}) =>
+      GridPopTheme(palette: palette ?? this.palette);
+
+  @override
+  GridPopTheme lerp(ThemeExtension<GridPopTheme>? other, double t) {
+    if (other is! GridPopTheme) {
+      return this;
+    }
+    // Colours are discrete families, so the swap is instant instead of a
+    // muddy blend between two different art directions.
+    return t < 0.5 ? this : other;
+  }
 }

@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/piece_palette.dart';
+import '../../../core/theme/visual_style.dart';
 import '../../../core/utils/grid_geometry.dart';
 import '../../models/grid_position.dart';
 import '../../models/piece_slot.dart';
@@ -15,12 +16,14 @@ class PiecePreviewPainter extends CustomPainter {
     required this.slot,
     required this.maxCell,
     this.opacity = 1,
+    this.blockStyle = BlockStyle.soft,
     super.repaint,
   });
 
   final PieceSlot slot;
   final double maxCell;
   final double opacity;
+  final BlockStyle blockStyle;
   PieceColor? _overrideColor;
 
   set overrideColor(PieceColor? value) => _overrideColor = value;
@@ -65,6 +68,7 @@ class PiecePreviewPainter extends CustomPainter {
         geometry.cellRect(cell.row, cell.col),
         color,
         alpha: opacity,
+        style: blockStyle,
       );
     }
   }
@@ -73,6 +77,7 @@ class PiecePreviewPainter extends CustomPainter {
   bool shouldRepaint(PiecePreviewPainter oldDelegate) =>
       oldDelegate.slot != slot ||
       oldDelegate.maxCell != maxCell ||
+      oldDelegate.blockStyle != blockStyle ||
       oldDelegate.opacity != opacity ||
       oldDelegate._overrideColor != _overrideColor;
 }

@@ -183,6 +183,7 @@ class _TraySlot extends StatelessWidget {
                 slot: slot!,
                 maxCell: 84,
                 opacity: inactive ? 0.28 : 1,
+                blockStyle: palette.blockStyle,
                 repaint: repaint,
               ),
             ),

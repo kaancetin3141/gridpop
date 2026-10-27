@@ -289,7 +289,11 @@ class _ShapeTile extends StatelessWidget {
           SizedBox(
             height: 44,
             child: CustomPaint(
-              painter: PiecePreviewPainter(slot: slot, maxCell: 30),
+              painter: PiecePreviewPainter(
+                slot: slot,
+                maxCell: 30,
+                blockStyle: AppPalette.of(context).blockStyle,
+              ),
             ),
           ),
           const SizedBox(height: 4),

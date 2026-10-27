@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 
 import 'app_colors.dart';
+import 'visual_style.dart';
 
 /// Corner radii used across the app.
 class AppRadius {
@@ -62,39 +63,41 @@ class AppTheme {
 
   static const String fontFamily = 'Roboto';
 
-  static ThemeData light() => _build(Brightness.light);
+  static ThemeData light({VisualStyle style = VisualStyle.aurora}) =>
+      _build(Brightness.light, style);
 
-  static ThemeData dark() => _build(Brightness.dark);
+  static ThemeData dark({VisualStyle style = VisualStyle.aurora}) =>
+      _build(Brightness.dark, style);
 
-  static ThemeData _build(Brightness brightness) {
-    final bool isDark = brightness == Brightness.dark;
+  static ThemeData _build(Brightness brightness, VisualStyle style) {
+    final AppPalette palette = AppPalette.build(style, brightness);
     final ColorScheme scheme = ColorScheme.fromSeed(
-      seedColor: AppColors.indigo,
+      seedColor: palette.accent,
       brightness: brightness,
     ).copyWith(
-      primary: isDark ? AppColors.violet : AppColors.indigo,
-      secondary: AppColors.magenta,
-      tertiary: AppColors.coral,
-      surface: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-      onSurface: isDark ? AppColors.darkText : AppColors.lightText,
+      primary: palette.accent,
+      secondary: style == VisualStyle.aurora ? AppColors.magenta : palette.accent,
+      tertiary:
+          style == VisualStyle.aurora ? AppColors.coral : palette.textMuted,
+      surface: palette.surface,
+      onSurface: palette.text,
       error: AppColors.danger,
     );
 
-    final TextTheme text = _textTheme(isDark ? AppColors.darkText : AppColors.lightText);
+    final TextTheme text = _textTheme(palette.text);
 
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,
       colorScheme: scheme,
-      scaffoldBackgroundColor:
-          isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      scaffoldBackgroundColor: palette.background,
       fontFamily: fontFamily,
       textTheme: text,
       splashFactory: InkSparkle.splashFactory,
       visualDensity: VisualDensity.adaptivePlatformDensity,
       dividerColor: Colors.transparent,
       iconTheme: IconThemeData(
-        color: isDark ? AppColors.darkText : AppColors.lightText,
+        color: palette.text,
         size: 22,
       ),
       appBarTheme: AppBarTheme(
@@ -102,18 +105,18 @@ class AppTheme {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        foregroundColor: isDark ? AppColors.darkText : AppColors.lightText,
+        foregroundColor: palette.text,
         titleTextStyle: text.titleLarge,
       ),
       bottomSheetTheme: BottomSheetThemeData(
-        backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        backgroundColor: palette.surface,
         surfaceTintColor: Colors.transparent,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
         ),
       ),
       dialogTheme: DialogThemeData(
-        backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        backgroundColor: palette.surface,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.lg),
@@ -121,7 +124,7 @@ class AppTheme {
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        backgroundColor: isDark ? AppColors.darkSurfaceAlt : AppColors.lightText,
+        backgroundColor: palette.surfaceAlt,
         contentTextStyle: text.bodyMedium?.copyWith(color: Colors.white),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.md),
@@ -134,18 +137,21 @@ class AppTheme {
         ),
         trackColor: WidgetStateProperty.resolveWith<Color?>(
           (Set<WidgetState> states) => states.contains(WidgetState.selected)
-              ? AppColors.mint
-              : (isDark ? AppColors.darkCell : AppColors.lightCell),
+              ? AppColors.success
+              : palette.cell,
         ),
         trackOutlineColor: WidgetStateProperty.all<Color>(Colors.transparent),
       ),
       tooltipTheme: TooltipThemeData(
         decoration: BoxDecoration(
-          color: isDark ? AppColors.darkSurfaceAlt : AppColors.lightText,
+          color: palette.surfaceAlt,
           borderRadius: BorderRadius.circular(AppRadius.sm),
         ),
         textStyle: text.bodySmall?.copyWith(color: Colors.white),
       ),
+      extensions: <ThemeExtension<dynamic>>[
+        GridPopTheme(palette: palette),
+      ],
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: <TargetPlatform, PageTransitionsBuilder>{
           TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),

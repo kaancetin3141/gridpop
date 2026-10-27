@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/piece_palette.dart';
+import '../../../core/theme/visual_style.dart';
 
 /// Draws one GridPop block.
 ///
@@ -24,7 +25,16 @@ class BlockPainter {
   static const double shadeOpacity = 0.20;
 
   /// Radius factor, shared with the board cell design.
-  static double radiusFor(double size) => size * BoardConfig.cornerRadiusFactor;
+  ///
+  /// Pixel blocks keep hard corners, the printed style sits between the two.
+  static double radiusFor(double size, {BlockStyle style = BlockStyle.soft}) {
+    return switch (style) {
+      BlockStyle.soft => size * BoardConfig.cornerRadiusFactor,
+      BlockStyle.neon => size * 0.26,
+      BlockStyle.matte => size * 0.16,
+      BlockStyle.retro => size * 0.05,
+    };
+  }
 
   /// Paints a block inside [rect].
   ///
@@ -37,6 +47,7 @@ class BlockPainter {
     double alpha = 1,
     double scale = 1,
     bool ghost = false,
+    BlockStyle style = BlockStyle.soft,
   }) {
     if (rect.isEmpty || alpha <= 0) {
       return;
@@ -51,8 +62,22 @@ class BlockPainter {
           );
 
     if (ghost) {
-      _paintGhost(canvas, target, color, alpha);
+      _paintGhost(canvas, target, color, alpha, style);
       return;
+    }
+
+    switch (style) {
+      case BlockStyle.soft:
+        break;
+      case BlockStyle.neon:
+        _paintNeon(canvas, target, color, alpha);
+        return;
+      case BlockStyle.matte:
+        _paintMatte(canvas, target, color, alpha);
+        return;
+      case BlockStyle.retro:
+        _paintRetro(canvas, target, color, alpha);
+        return;
     }
 
     final double lip = target.shortestSide * lipFactor;
@@ -184,15 +209,169 @@ class BlockPainter {
     );
   }
 
-  static void _paintGhost(
+  /// Neon tube: flat face, hot rim and a soft bloom, no cast shadow.
+  static void _paintNeon(
     Canvas canvas,
     Rect rect,
     PieceColor color,
     double alpha,
   ) {
+    final double radius = radiusFor(rect.shortestSide, style: BlockStyle.neon);
+    final RRect body = RRect.fromRectAndRadius(rect, Radius.circular(radius));
+
+    // Bloom: one blurred copy of the accent is cheaper than a real glow pass
+    // and still reads as light bleeding into the dark stage.
+    canvas.drawRRect(
+      body,
+      Paint()
+        ..color = color.accent.withOpacity(0.34 * alpha)
+        ..maskFilter = MaskFilter.blur(
+          BlurStyle.normal,
+          rect.shortestSide * 0.22,
+        ),
+    );
+
+    canvas.drawRRect(
+      body,
+      Paint()
+        ..shader = ui.Gradient.linear(
+          rect.topCenter,
+          rect.bottomCenter,
+          <Color>[
+            color.base.withOpacity(alpha),
+            Color.lerp(color.base, Colors.black, 0.30)!.withOpacity(alpha),
+          ],
+        ),
+    );
+
+    // Hot rim: the tube itself.
+    canvas.drawRRect(
+      body.deflate(rect.shortestSide * 0.055),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = mathMax(1.4, rect.shortestSide * 0.055)
+        ..color = Color.lerp(color.light, Colors.white, 0.35)!
+            .withOpacity(0.95 * alpha),
+    );
+
+    // Inner core: a dim centre keeps the tile from looking like a solid disc.
+    canvas.drawRRect(
+      body.deflate(rect.shortestSide * 0.20),
+      Paint()..color = Color.lerp(color.base, Colors.white, 0.10)!
+          .withOpacity(0.55 * alpha),
+    );
+  }
+
+  /// Printed cardboard: flat pastel face, thin ink outline, no shine at all.
+  static void _paintMatte(
+    Canvas canvas,
+    Rect rect,
+    PieceColor color,
+    double alpha,
+  ) {
+    final double radius = radiusFor(rect.shortestSide, style: BlockStyle.matte);
+    final RRect body = RRect.fromRectAndRadius(rect, Radius.circular(radius));
+
+    // A single soft contact shadow keeps the tile glued to the board.
+    canvas.drawRRect(
+      body.shift(Offset(0, rect.shortestSide * 0.04)),
+      Paint()..color = Colors.black.withOpacity(0.16 * alpha),
+    );
+
+    // Pastel face: pulled towards white so the ink outline stays readable.
+    final Color face = Color.lerp(color.base, Colors.white, 0.14)!;
+    canvas.drawRRect(body, Paint()..color = face.withOpacity(alpha));
+
+    // Ink rim, drawn inside so neighbouring tiles never touch.
+    canvas.drawRRect(
+      body.deflate(rect.shortestSide * 0.03),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = mathMax(1, rect.shortestSide * 0.035)
+        ..color = Color.lerp(color.dark, Colors.black, 0.25)!
+            .withOpacity(0.55 * alpha),
+    );
+
+    // Flat paper highlight: a thin light band, no gradient.
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(
+          rect.left + rect.width * 0.12,
+          rect.top + rect.height * 0.12,
+          rect.width * 0.76,
+          rect.height * 0.10,
+        ),
+        Radius.circular(rect.height * 0.05),
+      ),
+      Paint()..color = Colors.white.withOpacity(0.22 * alpha),
+    );
+  }
+
+  /// Pixel block: hard square, chunky bevel, quantised shading, no blur.
+  static void _paintRetro(
+    Canvas canvas,
+    Rect rect,
+    PieceColor color,
+    double alpha,
+  ) {
+    final double radius = radiusFor(rect.shortestSide, style: BlockStyle.retro);
+    final RRect body = RRect.fromRectAndRadius(rect, Radius.circular(radius));
+    final double bevel = mathMax(2, rect.shortestSide * 0.14);
+
+    canvas.drawRRect(
+      body,
+      Paint()..color = Color.lerp(color.base, Colors.black, 0.10)!
+          .withOpacity(alpha),
+    );
+
+    // Hard top bevel and bottom shade: the 8-bit cube read.
+    canvas.drawRect(
+      Rect.fromLTWH(rect.left, rect.top, rect.width, bevel),
+      Paint()..color = color.light.withOpacity(0.95 * alpha),
+    );
+    canvas.drawRect(
+      Rect.fromLTWH(
+        rect.left,
+        rect.bottom - bevel,
+        rect.width,
+        bevel,
+      ),
+      Paint()..color = color.dark.withOpacity(0.95 * alpha),
+    );
+
+    // Dark pixel border.
+    canvas.drawRRect(
+      body.deflate(rect.shortestSide * 0.02),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = mathMax(1.5, rect.shortestSide * 0.045)
+        ..color = Color.lerp(color.dark, Colors.black, 0.55)!
+            .withOpacity(alpha),
+    );
+
+    // Corner pixels: a tiny light square keeps the block from reading flat.
+    final double dot = mathMax(2, rect.shortestSide * 0.10);
+    canvas.drawRect(
+      Rect.fromLTWH(
+        rect.left + rect.width * 0.14,
+        rect.top + rect.height * 0.22,
+        dot,
+        dot,
+      ),
+      Paint()..color = Colors.white.withOpacity(0.35 * alpha),
+    );
+  }
+
+  static void _paintGhost(
+    Canvas canvas,
+    Rect rect,
+    PieceColor color,
+    double alpha,
+    BlockStyle style,
+  ) {
     final RRect rrect = RRect.fromRectAndRadius(
       rect,
-      Radius.circular(radiusFor(rect.shortestSide)),
+      Radius.circular(radiusFor(rect.shortestSide, style: style)),
     );
     canvas.drawRRect(
       rrect,
@@ -208,11 +387,16 @@ class BlockPainter {
   }
 
   /// Paints the empty cell socket of the board.
-  static void paintCellSocket(Canvas canvas, Rect rect, Color color) {
+  static void paintCellSocket(
+    Canvas canvas,
+    Rect rect,
+    Color color, {
+    BlockStyle style = BlockStyle.soft,
+  }) {
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         rect,
-        Radius.circular(radiusFor(rect.shortestSide)),
+        Radius.circular(radiusFor(rect.shortestSide, style: style)),
       ),
       Paint()..color = color,
     );

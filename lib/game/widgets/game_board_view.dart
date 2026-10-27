@@ -528,6 +528,7 @@ final Widget boardStack = AnimatedScale(
                       painter: EffectsPainter(
                         effects: widget.effects,
                         geometry: geometry,
+                        blockStyle: palette.blockStyle,
                         repaint: widget.effects,
                       ),
                     ),

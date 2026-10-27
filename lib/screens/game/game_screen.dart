@@ -25,6 +25,7 @@ import '../../game/widgets/game_board_view.dart';
 import '../../game/widgets/game_hud.dart';
 import '../../shop/shop_item.dart';
 import '../../state/app_scope.dart';
+import '../../widgets/animations/motion.dart';
 import '../../widgets/app_background.dart';
 import '../../widgets/buttons/game_buttons.dart';
 import '../../widgets/dialogs/app_dialogs.dart';
@@ -590,15 +591,21 @@ Future<void> _showGameOver(GameEndSummary summary) async {
           child: child,
         );
       },
-      child: GameBoardView(
-        key: _boardKey,
-        controller: _controller,
-        effects: _effects,
-        showGhost: AppScope.of(context).settings.showGhost,
-        highlightedSlot: _hintSlot,
-        aiming: _aimItem != null,
-        onCellTap: _onCellTap,
-        onSettled: _controller.completePlacement,
+      // The board slides up and fades in once per run. Scale stays at 1 so the
+      // drag math (which works in global coordinates) is never distorted.
+      child: PopIn(
+        offset: const Offset(0, 0.035),
+        scale: 1,
+        child: GameBoardView(
+          key: _boardKey,
+          controller: _controller,
+          effects: _effects,
+          showGhost: AppScope.of(context).settings.showGhost,
+          highlightedSlot: _hintSlot,
+          aiming: _aimItem != null,
+          onCellTap: _onCellTap,
+          onSettled: _controller.completePlacement,
+        ),
       ),
     );
 

@@ -5,12 +5,14 @@ import '../../core/constants/app_constants.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/theme/visual_style.dart';
 import '../../core/utils/responsive.dart';
 import '../../state/app_scope.dart';
 import '../../widgets/app_background.dart';
 import '../../widgets/animations/motion.dart';
 import '../../widgets/buttons/game_buttons.dart';
 import '../../widgets/dialogs/app_dialogs.dart';
+import '../../widgets/style_swatch.dart';
 
 /// Settings screen: gameplay, audio, appearance and data.
 class SettingsScreen extends StatelessWidget {
@@ -122,6 +124,10 @@ class SettingsScreen extends StatelessWidget {
                               _ThemeSelector(
                                 value: settings.themeMode,
                                 onChanged: settings.setThemeMode,
+                              ),
+                              _StyleSelector(
+                                value: settings.visualStyle,
+                                onChanged: settings.setVisualStyle,
                               ),
                               _LanguageSelector(
                                 value: settings.languageCode,
@@ -400,6 +406,114 @@ class _ThemeSelector extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _StyleSelector extends StatelessWidget {
+  const _StyleSelector({required this.value, required this.onChanged});
+
+  final VisualStyle value;
+  final ValueChanged<VisualStyle> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final AppStrings strings = AppStrings.of(context);
+    final AppPalette palette = AppPalette.of(context);
+    return Padding(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            strings.t('settings.style'),
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: AppSpacing.xxs),
+          Text(
+            strings.t('settings.styleHint'),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: palette.textMuted,
+                ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              for (final VisualStyle style in VisualStyle.values)
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: AppSpacing.sm),
+                    child: _StyleTile(
+                      style: style,
+                      selected: style == value,
+                      onTap: () => onChanged(style),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// One style choice: a live swatch plus its name.
+class _StyleTile extends StatelessWidget {
+  const _StyleTile({
+    required this.style,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final VisualStyle style;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final AppStrings strings = AppStrings.of(context);
+    final AppPalette palette = AppPalette.of(context);
+    final Color tint = selected ? palette.accent : palette.textMuted;
+    // The tile announces itself through the visible label; the wrapper only
+    // adds the selected/button roles so screen readers can pick a style too.
+    return Semantics(
+      selected: selected,
+      button: true,
+      child: Pressable(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+          decoration: BoxDecoration(
+            color: selected
+                ? palette.accent.withValues(alpha: 0.10)
+                : palette.surfaceAlt,
+            borderRadius: BorderRadius.circular(AppRadius.md),
+            border: Border.all(
+              color: selected ? palette.accent : palette.outline,
+              width: selected ? 1.6 : 1,
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              StyleSwatch(style: style, size: 46),
+              const SizedBox(height: 6),
+              Text(
+                strings.t(style.labelKey),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: tint,
+                      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                    ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

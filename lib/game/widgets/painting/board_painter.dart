@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/piece_palette.dart';
+import '../../../core/theme/visual_style.dart';
 import '../../../core/utils/grid_geometry.dart';
 import '../../models/board.dart';
 import '../../models/grid_position.dart';
@@ -70,7 +71,8 @@ class BoardPainter extends CustomPainter {
     // edge and a soft rim. That depth is what makes the board read as a
     // designed playfield instead of a flat grid of squares.
     final double side = geometry.cellSize - geometry.gap;
-    final double radius = BlockPainter.radiusFor(side);
+    final BlockStyle style = palette.blockStyle;
+    final double radius = BlockPainter.radiusFor(side, style: style);
     final RRect rrect = RRect.fromRectAndRadius(
       Rect.fromLTWH(0, 0, side, side),
       Radius.circular(radius),
@@ -78,38 +80,62 @@ class BoardPainter extends CustomPainter {
 
     final Color top = Color.lerp(cellColor, Colors.white, 0.10) ?? cellColor;
     final Color bottom = Color.lerp(cellColor, Colors.black, 0.30) ?? cellColor;
+    // Neon sockets are outlines on the stage; the printed styles use flat
+    // wells with an ink rim, the pixel style a plain square.
+    final bool outlined = style == BlockStyle.neon;
+    final bool flat = style == BlockStyle.matte || style == BlockStyle.retro;
 
     for (int row = 0; row < geometry.rows; row++) {
       for (int col = 0; col < geometry.columns; col++) {
         final Rect origin = geometry.cellRect(row, col);
         canvas.save();
         canvas.translate(origin.left, origin.top);
-        canvas.drawRRect(
-          rrect,
-          Paint()
-            ..shader = ui.Gradient.linear(
-              Offset.zero,
-              Offset(0, side),
-              <Color>[top, cellColor, bottom],
-              <double>[0, 0.55, 1],
-            ),
-        );
+        if (outlined) {
+          canvas.drawRRect(rrect, Paint()..color = Colors.white.withOpacity(0.02));
+          canvas.drawRRect(
+            rrect,
+            Paint()
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 1.2
+              ..color = palette.accent.withOpacity(0.16),
+          );
+        } else if (flat) {
+          canvas.drawRRect(rrect, Paint()..color = cellColor);
+          canvas.drawRRect(
+            rrect,
+            Paint()
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 1
+              ..color = palette.outline.withOpacity(0.7),
+          );
+        } else {
+          canvas.drawRRect(
+            rrect,
+            Paint()
+              ..shader = ui.Gradient.linear(
+                Offset.zero,
+                Offset(0, side),
+                <Color>[top, cellColor, bottom],
+                <double>[0, 0.55, 1],
+              ),
+          );
+        }
         // Sockets are wells: a dark top lip and a soft lit bottom edge.
-        canvas.drawRRect(
+        if (!flat && !outlined) canvas.drawRRect(
           RRect.fromRectAndRadius(
             Rect.fromLTWH(0, 0, side, side * 0.16),
             Radius.circular(radius),
           ),
           Paint()..color = Colors.black.withOpacity(0.16),
         );
-        canvas.drawRRect(
+        if (!flat && !outlined) canvas.drawRRect(
           RRect.fromRectAndRadius(
             Rect.fromLTWH(0, side * 0.84, side, side * 0.16),
             Radius.circular(radius),
           ),
           Paint()..color = Colors.white.withOpacity(0.05),
         );
-        canvas.drawRRect(
+        if (!flat && !outlined) canvas.drawRRect(
           rrect,
           Paint()
             ..style = PaintingStyle.stroke
@@ -132,6 +158,7 @@ class BoardPainter extends CustomPainter {
           canvas,
           geometry.cellRect(row, col),
           PiecePalette.byIndex(raw - 1),
+          style: palette.blockStyle,
         );
       }
     }
@@ -149,9 +176,11 @@ class BoardPainter extends CustomPainter {
         cell.col + ghost.leftCol,
       );
       if (!ghost.isValid) {
-        BlockPainter.paint(canvas, rect, color, alpha: 0.35, ghost: true);
+        BlockPainter.paint(canvas, rect, color,
+            alpha: 0.35, ghost: true, style: palette.blockStyle);
       } else {
-        BlockPainter.paint(canvas, rect, color, alpha: 0.9, ghost: true);
+        BlockPainter.paint(canvas, rect, color,
+            alpha: 0.9, ghost: true, style: palette.blockStyle);
       }
     }
   }
@@ -171,7 +200,8 @@ class BoardPainter extends CustomPainter {
         canvas.drawRRect(
           RRect.fromRectAndRadius(
             rect,
-            Radius.circular(BlockPainter.radiusFor(rect.width)),
+            Radius.circular(
+                BlockPainter.radiusFor(rect.width, style: palette.blockStyle)),
           ),
           paint,
         );
