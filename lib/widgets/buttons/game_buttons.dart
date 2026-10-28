@@ -268,6 +268,12 @@ class MenuTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final AppPalette palette = AppPalette.of(context);
     final Color accent = tint ?? AppColors.indigo;
+    // White glyphs on pastel candy read badly on a light stage (mint and
+    // sunbeam especially). Light mode gets a pastel plate with a deepened
+    // glyph instead, the same pairing the settings rows use.
+    final bool dark = palette.isDark;
+    final Color glyph =
+        dark ? Colors.white : AppColors.deep(accent, lightness: 0.4);
 
     return Pressable(
       onTap: onTap,
@@ -293,16 +299,25 @@ class MenuTile extends StatelessWidget {
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: <Color>[
-                    accent.withOpacity(0.9),
-                    Color.lerp(accent, Colors.white, 0.25)!,
-                  ],
+                  colors: dark
+                      ? <Color>[
+                          accent.withOpacity(0.9),
+                          Color.lerp(accent, Colors.white, 0.25)!,
+                        ]
+                      : <Color>[
+                          accent.withValues(alpha: 0.24),
+                          accent.withValues(alpha: 0.12),
+                        ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(AppRadius.md),
+                border: Border.all(
+                  color:
+                      dark ? Colors.transparent : accent.withValues(alpha: 0.3),
+                ),
               ),
-              child: Icon(icon, color: Colors.white, size: 24),
+              child: Icon(icon, color: glyph, size: 24),
             ),
             const SizedBox(width: AppSpacing.lg),
             Expanded(

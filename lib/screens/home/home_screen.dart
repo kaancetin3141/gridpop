@@ -390,9 +390,10 @@ class _StatChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final AppPalette palette = AppPalette.of(context);
     // Dark stage: the candy hue is the text colour. Light stage: the same hue
-    // is tinted into the fill, and the ink version carries the text, otherwise
-    // amber on beige would be unreadable.
-    final Color ink = palette.isDark ? color : AppColors.ink(color);
+    // is tinted into the fill while a deepened version carries the text, so
+    // gold stays gold instead of turning olive the way a navy blend does.
+    final Color ink =
+        palette.isDark ? color : AppColors.deep(color, lightness: 0.38);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
@@ -424,6 +425,9 @@ class _StatChip extends StatelessWidget {
   }
 }
 
+/// Ink for the gold coin chip: a deep cocoa that reads at 8:1 on gold.
+const Color _coinInk = Color(0xFF4A3200);
+
 class _CoinChip extends StatelessWidget {
   const _CoinChip({required this.coins});
 
@@ -442,20 +446,23 @@ class _CoinChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadius.md),
         boxShadow: AppShadows.lift(AppColors.amber, strength: 0.6),
       ),
+      // White on gold is barely 2:1; a cocoa ink keeps the coin chip readable
+      // in both themes and still looks like a price tag.
+      // (ink constant below)
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           Row(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              const Icon(Icons.paid_rounded, size: 13, color: Colors.white),
+              const Icon(Icons.paid_rounded, size: 13, color: _coinInk),
               const SizedBox(width: 3),
               Text(
                 AppStrings.of(context).t('shop.coinsName'),
                 style: Theme.of(context)
                     .textTheme
                     .labelSmall
-                    ?.copyWith(color: Colors.white, letterSpacing: 0.6),
+                    ?.copyWith(color: _coinInk, letterSpacing: 0.6),
               ),
             ],
           ),
@@ -463,7 +470,7 @@ class _CoinChip extends StatelessWidget {
           Text(
             ScoreFormat.number(coins),
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Colors.white,
+                  color: _coinInk,
                   fontWeight: FontWeight.w800,
                 ),
           ),
