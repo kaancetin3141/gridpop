@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_strings.dart';
 import '../../../core/theme/app_colors.dart';
@@ -60,73 +60,93 @@ class _GameOverDialog extends StatelessWidget {
                 children: <Widget>[
                   const PopIn(child: LogoMark(size: 64, animate: true)),
                   const SizedBox(height: AppSpacing.md),
-              PopIn(
-                delay: const Duration(milliseconds: 60),
-                child: Text(
-                  strings.t('game.gameOver'),
-                  style: Theme.of(context).textTheme.headlineMedium,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.xl),
-              PopIn(
-                delay: const Duration(milliseconds: 110),
-                child: Column(
-                  children: <Widget>[
-                    Text(
-                      strings.t('game.score'),
-                      style: Theme.of(context).textTheme.labelSmall,
+                  PopIn(
+                    delay: const Duration(milliseconds: 60),
+                    child: Text(
+                      strings.t('game.gameOver'),
+                      style:
+                          Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                fontWeight: FontWeight.w900,
+                              ),
                     ),
-                    const SizedBox(height: 4),
-                    CountUpText(
-                      value: summary.score,
-                      duration: const Duration(milliseconds: 700),
-                      builder: (BuildContext context, int value) => Text(
-                        ScoreFormat.number(value),
-                        style: Theme.of(context)
-                            .textTheme
-                            .displayLarge
-                            ?.copyWith(height: 1),
-                      ),
+                  ),
+                  const SizedBox(height: AppSpacing.xl),
+                  PopIn(
+                    delay: const Duration(milliseconds: 110),
+                    child: Column(
+                      children: <Widget>[
+                        Text(
+                          strings.t('game.score'),
+                          style: Theme.of(context).textTheme.labelSmall,
+                        ),
+                        const SizedBox(height: 4),
+                        CountUpText(
+                          value: summary.score,
+                          duration: const Duration(milliseconds: 700),
+                          builder: (BuildContext context, int value) => Text(
+                            ScoreFormat.number(value),
+                            style: Theme.of(context)
+                                .textTheme
+                                .displayLarge
+                                ?.copyWith(height: 1),
+                          ),
+                        ),
+                      ],
                     ),
+                  ),
+                  if (summary.hasStars) ...<Widget>[
+                    const SizedBox(height: AppSpacing.md),
+                    _Stars(count: summary.stars),
                   ],
-                ),
-              ),
-              if (summary.hasStars) ...<Widget>[
-                const SizedBox(height: AppSpacing.md),
-                _Stars(count: summary.stars),
-              ],
-              if (summary.isNewRecord) ...<Widget>[
-                const SizedBox(height: AppSpacing.lg),
-                const _RecordBadge(),
-              ],
-              const SizedBox(height: AppSpacing.xl),
-              _SummaryGrid(summary: summary),
-              const SizedBox(height: AppSpacing.xl),
-              PrimaryButton(
-                label: strings.t('common.retry'),
-                icon: Icons.refresh_rounded,
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  onRetry();
-                },
-              ),
-              const SizedBox(height: AppSpacing.md),
-              SoftButton(
-                label: strings.t('common.menu'),
-                icon: Icons.home_rounded,
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  onMenu();
-                },
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                '${strings.t('game.mode')}: ${strings.t(summary.mode.labelKey)}',
-                style: Theme.of(context)
-                    .textTheme
-                    .labelSmall
-                    ?.copyWith(color: palette.textMuted),
-              ),
+                  if (summary.isNewRecord) ...<Widget>[
+                    const SizedBox(height: AppSpacing.lg),
+                    const _RecordBadge(),
+                  ],
+                  const SizedBox(height: AppSpacing.xl),
+                  _SummaryGrid(summary: summary),
+                  const SizedBox(height: AppSpacing.xl),
+                  PrimaryButton(
+                    label: strings.t('common.retry'),
+                    icon: Icons.refresh_rounded,
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      onRetry();
+                    },
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  SoftButton(
+                    label: strings.t('common.menu'),
+                    icon: Icons.home_rounded,
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      onMenu();
+                    },
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  // The icon says "this was a mode" so the line stops reading like
+                  // a debug label under the buttons.
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Icon(
+                        Icons.videogame_asset_rounded,
+                        size: 13,
+                        color: palette.textMuted,
+                      ),
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          strings.t(summary.mode.labelKey),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context)
+                              .textTheme
+                              .labelSmall
+                              ?.copyWith(color: palette.textMuted),
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -158,7 +178,8 @@ class _RecordBadge extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            const Icon(Icons.emoji_events_rounded, color: Colors.white, size: 18),
+            const Icon(Icons.emoji_events_rounded,
+                color: Colors.white, size: 18),
             const SizedBox(width: 6),
             Text(
               strings.t('game.newBest'),
