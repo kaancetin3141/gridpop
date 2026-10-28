@@ -25,6 +25,15 @@ class AppStrings {
   /// All language codes shipped with the game.
   static const List<String> supportedLanguageCodes = <String>['en', 'tr'];
 
+  /// Short month names, January first.
+  ///
+  /// Kept as one comma separated string instead of 12 keys so a date can be
+  /// formatted without another lookup table.
+  static const String _enMonths =
+      'Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec';
+  static const String _trMonths =
+      'Oca,Şub,Mar,Nis,May,Haz,Tem,Ağu,Eyl,Eki,Kas,Ara';
+
   /// Display names shown in the settings screen.
   static String languageName(String code) {
     return code == 'tr' ? 'Türkçe' : 'English';
@@ -38,6 +47,19 @@ class AppStrings {
       return localized;
     }
     return _en[key] ?? key;
+  }
+
+  /// Day and month in the active language, e.g. `28 Oct` / `28 Eki`.
+  ///
+  /// Dependency free on purpose: the game ships without `intl`, and a short
+  /// "day month" label is all the daily card and the leaderboard need. The
+  /// month name keeps its own casing, because Dart's `toUpperCase` turns a
+  /// Turkish `i` into `I` rather than `İ`.
+  String shortDate(DateTime date) {
+    final List<String> months =
+        (languageCode == 'tr' ? _trMonths : _enMonths).split(',');
+    final int index = date.month.clamp(1, 12) - 1;
+    return '${date.day} ${months[index]}';
   }
 
   /// Convenience shortcut used inside widgets.

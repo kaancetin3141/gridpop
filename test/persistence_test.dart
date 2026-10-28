@@ -331,5 +331,22 @@ void main() {
       expect(turkish.t('unknown.key'), 'unknown.key',
           reason: 'falls back to english then to the key itself');
     });
+
+    test('short date follows the active language', () {
+      final AppStrings english = AppStrings.ofLanguage('en');
+      final AppStrings turkish = AppStrings.ofLanguage('tr');
+      final DateTime date = DateTime(2026, 10, 28);
+      expect(english.shortDate(date), '28 Oct');
+      expect(turkish.shortDate(date), '28 Eki');
+      // Every month resolves in every language, including the edge cases.
+      for (final AppStrings strings in <AppStrings>[english, turkish]) {
+        for (int month = 1; month <= 12; month++) {
+          final String label = strings.shortDate(DateTime(2026, month, 1));
+          expect(label, startsWith('1 '));
+          expect(label.length, greaterThan(2));
+          expect(label.contains('null'), isFalse);
+        }
+      }
+    });
   });
 }

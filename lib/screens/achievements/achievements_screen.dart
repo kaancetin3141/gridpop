@@ -48,6 +48,36 @@ class AchievementsScreen extends StatelessWidget {
     AchievementTier.gold: AppColors.gold,
   };
 
+  /// One accent per badge.
+  ///
+  /// The tier still decides the border and the group header, but without an
+  /// own hue every bronze badge would be the same orange square. These accents
+  /// are picked to sit next to each other without clashing.
+  static const Map<String, Color> accents = <String, Color>{
+    'firstSteps': AppColors.violet,
+    'lineCook': AppColors.sky,
+    'comboStarter': AppColors.tangerine,
+    'firstSpark': AppColors.magenta,
+    'risingStar': AppColors.gold,
+    'brickLayer': AppColors.mint,
+    'dailyDevotion': AppColors.coral,
+    'steady': AppColors.lime,
+    'regular': AppColors.grape,
+    'carpenter': AppColors.tangerine,
+    'comboMaster': AppColors.coral,
+    'perfectionist': AppColors.bubblegum,
+    'builder': AppColors.amber,
+    'highRoller': AppColors.gold,
+    'blitz': AppColors.sky,
+    'starCollector': AppColors.violet,
+    'veteran': AppColors.grape,
+    'architect': AppColors.sky,
+    'grandBuilder': AppColors.mint,
+    'comboFrenzy': AppColors.amber,
+    'gridLegend': AppColors.gold,
+    'marathon': AppColors.magenta,
+  };
+
   @override
   Widget build(BuildContext context) {
     final AppStrings strings = AppStrings.of(context);
@@ -62,8 +92,7 @@ class AchievementsScreen extends StatelessWidget {
               services.achievements.statusesFromStats(services.stats);
           final int unlocked =
               rows.where((AchievementStatus r) => r.unlocked).length;
-          final double ratio =
-              rows.isEmpty ? 0 : unlocked / rows.length;
+          final double ratio = rows.isEmpty ? 0 : unlocked / rows.length;
 
           return Column(
             children: <Widget>[
@@ -194,8 +223,7 @@ class _SummaryCard extends StatelessWidget {
               value: ratio.clamp(0.0, 1.0),
               minHeight: 8,
               backgroundColor: Colors.white.withOpacity(0.25),
-              valueColor:
-                  const AlwaysStoppedAnimation<Color>(Colors.white),
+              valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
             ),
           ),
           const SizedBox(height: 6),
@@ -220,19 +248,42 @@ class _TierHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final AppStrings strings = AppStrings.of(context);
+    final AppPalette palette = AppPalette.of(context);
+    final Color tierColor =
+        AchievementsScreen.tierColors[tier] ?? AppColors.indigo;
     final String label = switch (tier) {
       AchievementTier.bronze => strings.t('achievements.tierBronze'),
       AchievementTier.silver => strings.t('achievements.tierSilver'),
       AchievementTier.gold => strings.t('achievements.tierGold'),
     };
     return Padding(
-      padding: const EdgeInsets.only(left: 6, bottom: AppSpacing.sm, top: 4),
-      child: Text(
-        label.toUpperCase(),
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: AppPalette.of(context).textMuted,
-              letterSpacing: 1.2,
+      padding: const EdgeInsets.only(left: 4, bottom: AppSpacing.sm, top: 6),
+      child: Row(
+        children: <Widget>[
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: palette.isDark ? tierColor : AppColors.ink(tierColor),
+              shape: BoxShape.circle,
             ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            label.toUpperCase(),
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: palette.textMuted,
+                  letterSpacing: 1.2,
+                ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Container(
+              height: 1,
+              color: palette.outline,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -251,19 +302,89 @@ class _AchievementCard extends StatelessWidget {
     final Color tierColor =
         AchievementsScreen.tierColors[achievement.tier] ?? AppColors.indigo;
     final bool unlocked = status.unlocked;
+    final Color rawAccent =
+        AchievementsScreen.accents[achievement.id] ?? tierColor;
+    final Color accent = palette.isDark ? rawAccent : AppColors.ink(rawAccent);
+    final IconData glyph =
+        AchievementsScreen.icons[achievement.id] ?? Icons.emoji_events_rounded;
+
+    // The tile carries the badge identity, the row border carries the tier, so
+    // a list of 22 medals does not read as a wall of identical squares.
+    final bool dark = palette.isDark;
+    final Color lockedInk = Color.lerp(accent, palette.textMuted, 0.4)!;
+    final Color glyphInk =
+        dark ? Colors.white : AppColors.ink(rawAccent, amount: 0.35);
+    final Widget tile = Container(
+      width: 42,
+      height: 42,
+      decoration: BoxDecoration(
+        // Dark mode keeps a shaded candy tile with a white glyph; light mode
+        // flips to a pastel tile with a deep glyph, which matches the paper
+        // feel of the light theme instead of punching dark holes in the card.
+        gradient: unlocked && dark
+            ? LinearGradient(
+                colors: <Color>[
+                  Color.lerp(accent, Colors.white, 0.08)!,
+                  Color.lerp(accent, Colors.black, 0.26)!,
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              )
+            : null,
+        color: unlocked
+            ? (dark ? null : rawAccent.withValues(alpha: 0.18))
+            : lockedInk.withValues(alpha: dark ? 0.12 : 0.10),
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: unlocked
+            ? (dark
+                ? null
+                : Border.all(color: rawAccent.withValues(alpha: 0.3)))
+            : Border.all(color: lockedInk.withValues(alpha: 0.32)),
+      ),
+      child: Stack(
+        children: <Widget>[
+          Center(
+            child: Icon(
+              glyph,
+              size: 22,
+              color: unlocked ? glyphInk : lockedInk,
+            ),
+          ),
+          // A locked badge keeps its own symbol and only gains a small lock
+          // in the corner, so the player can still see what it looks like.
+          if (!unlocked)
+            Positioned(
+              right: 1,
+              bottom: 1,
+              child: Container(
+                padding: const EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                  color: palette.surface,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: palette.outline),
+                ),
+                child: Icon(
+                  Icons.lock_rounded,
+                  size: 8,
+                  color: palette.textMuted,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
 
     return AnimatedOpacity(
-      opacity: unlocked ? 1 : 0.75,
+      opacity: unlocked ? 1 : 0.92,
       duration: const Duration(milliseconds: 250),
       child: Container(
-        padding: const EdgeInsets.all(AppSpacing.md),
+        padding: const EdgeInsets.fromLTRB(10, 10, 12, 10),
         decoration: BoxDecoration(
           color: palette.surface,
           borderRadius: BorderRadius.circular(AppRadius.lg),
           border: Border.all(
-            color: unlocked
-                ? tierColor.withOpacity(0.55)
-                : palette.outline,
+            color:
+                unlocked ? tierColor.withValues(alpha: 0.5) : palette.outline,
           ),
           boxShadow: AppShadows.soft(
             palette.isDark ? Colors.black : AppColors.indigo,
@@ -272,37 +393,8 @@ class _AchievementCard extends StatelessWidget {
         ),
         child: Row(
           children: <Widget>[
-            Container(
-              width: 46,
-              height: 46,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                gradient: unlocked
-                    ? LinearGradient(
-                        colors: <Color>[
-                          tierColor,
-                          Color.lerp(tierColor, Colors.white, 0.25)!,
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      )
-                    : null,
-                color: unlocked ? null : palette.surfaceAlt,
-                borderRadius: BorderRadius.circular(AppRadius.md),
-                border: unlocked
-                    ? null
-                    : Border.all(color: palette.outline),
-              ),
-              child: Icon(
-                unlocked
-                    ? (AchievementsScreen.icons[achievement.id] ??
-                        Icons.emoji_events_rounded)
-                    : Icons.lock_rounded,
-                color: unlocked ? Colors.white : palette.textMuted,
-                size: 24,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.md),
+            tile,
+            const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -311,7 +403,7 @@ class _AchievementCard extends StatelessWidget {
                     strings.t(achievement.titleKey),
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 1),
                   Text(
                     strings.t(achievement.descriptionKey),
                     style: Theme.of(context)
@@ -320,17 +412,17 @@ class _AchievementCard extends StatelessWidget {
                         ?.copyWith(color: palette.textMuted),
                   ),
                   if (!unlocked && achievement.metric.isCumulative) ...<Widget>[
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 7),
                     ClipRRect(
                       borderRadius: BorderRadius.circular(4),
                       child: LinearProgressIndicator(
                         value: status.ratio.clamp(0.0, 1.0),
-                        minHeight: 6,
+                        minHeight: 5,
                         backgroundColor: palette.outline,
-                        valueColor: AlwaysStoppedAnimation<Color>(tierColor),
+                        valueColor: AlwaysStoppedAnimation<Color>(accent),
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 3),
                     Text(
                       '${ScoreFormat.number(status.progress)} / ${ScoreFormat.number(achievement.target)}',
                       style: Theme.of(context)
@@ -344,19 +436,12 @@ class _AchievementCard extends StatelessWidget {
             ),
             if (unlocked) ...<Widget>[
               const SizedBox(width: AppSpacing.sm),
-              Container(
-                width: 30,
-                height: 30,
-                alignment: Alignment.center,
-                decoration: const BoxDecoration(
-                  color: AppColors.success,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.check_rounded,
-                  color: Colors.white,
-                  size: 18,
-                ),
+              Icon(
+                Icons.check_circle_rounded,
+                size: 20,
+                color: palette.isDark
+                    ? AppColors.success
+                    : AppColors.ink(AppColors.success),
               ),
             ],
           ],

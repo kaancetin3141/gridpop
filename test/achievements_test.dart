@@ -1,8 +1,10 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gridpop/game/achievements/achievement.dart';
 import 'package:gridpop/game/achievements/achievement_catalog.dart';
 import 'package:gridpop/game/achievements/achievement_engine.dart';
 import 'package:gridpop/game/models/game_mode.dart';
+import 'package:gridpop/screens/achievements/achievements_screen.dart';
 import 'package:gridpop/state/achievements_controller.dart';
 import 'package:gridpop/state/stats_controller.dart';
 import 'package:gridpop/storage/storage_manager.dart';
@@ -49,8 +51,8 @@ void main() {
         const <String>{},
       );
       expect(rows, hasLength(AchievementCatalog.all.length));
-      expect(AchievementEngine.newlyUnlocked(snapshot, const <String>{}),
-          isEmpty);
+      expect(
+          AchievementEngine.newlyUnlocked(snapshot, const <String>{}), isEmpty);
       for (final AchievementStatus row in rows) {
         expect(row.unlocked, isFalse);
         expect(row.progress, 0);
@@ -233,6 +235,47 @@ void main() {
       await controller.reset();
       expect(controller.unlockedCount, 0);
       expect(AchievementsController(storage).unlockedCount, 0);
+    });
+  });
+
+  group('Achievement presentation', () {
+    test('every badge has an icon and a tier unique accent', () {
+      for (final AchievementTier tier in AchievementTier.values) {
+        final List<Achievement> badges = AchievementCatalog.all
+            .where((Achievement a) => a.tier == tier)
+            .toList();
+        final Set<Color> accents = <Color>{};
+        for (final Achievement achievement in badges) {
+          expect(
+            AchievementsScreen.icons[achievement.id],
+            isNotNull,
+            reason: 'no icon for ${achievement.id}',
+          );
+          final Color? accent = AchievementsScreen.accents[achievement.id];
+          expect(accent, isNotNull, reason: 'no accent for ${achievement.id}');
+          accents.add(accent!);
+        }
+        expect(
+          accents,
+          hasLength(badges.length),
+          reason: 'two $tier badges share an accent colour',
+        );
+      }
+    });
+
+    test('accent table has no stale entries', () {
+      final Set<String> ids =
+          AchievementCatalog.all.map((Achievement a) => a.id).toSet();
+      expect(
+        AchievementsScreen.accents.keys.where((String id) => !ids.contains(id)),
+        isEmpty,
+        reason: 'accents for badges that no longer exist',
+      );
+      expect(
+        AchievementsScreen.icons.keys.where((String id) => !ids.contains(id)),
+        isEmpty,
+        reason: 'icons for badges that no longer exist',
+      );
     });
   });
 }

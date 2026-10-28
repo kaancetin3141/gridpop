@@ -73,6 +73,17 @@ class AppColors {
   static Color ink(Color color, {double amount = 0.58}) =>
       Color.lerp(color, const Color(0xFF1A1030), amount)!;
 
+  /// A darker, still saturated version of [color] for text and icons on a
+  /// light surface.
+  ///
+  /// [ink] pulls a hue towards the dark navy, which turns orange into brown and
+  /// gold into olive; lowering the HSL lightness instead keeps the colour
+  /// recognisable while buying contrast.
+  static Color deep(Color color, {double lightness = 0.4}) {
+    final HSLColor hsl = HSLColor.fromColor(color);
+    return hsl.withLightness(lightness.clamp(0.0, 1.0)).toColor();
+  }
+
   // Semantic -------------------------------------------------------------
   static const Color success = Color(0xFF2FCB8C);
   static const Color danger = Color(0xFFFF5C7A);

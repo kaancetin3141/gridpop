@@ -19,7 +19,7 @@ columns, grow the combo multiplier and chase the high score.
 </p>
 <p align="center">
   <img src="docs/screenshots/shop.png" width="240" alt="Shop with power-ups and a rewarded ad">
-  <img src="docs/screenshots/achievements.png" width="240" alt="Achievement badges with progress">
+  <img src="docs/screenshots/achievements.png" width="240" alt="Achievement badges with per-badge colours and progress">
 </p>
 
 The images are rendered by the real widget tree at phone resolution with the
@@ -219,7 +219,10 @@ or simply closes the sheet — there is no rollback path and no double count.
 22 badges (bronze / silver / gold) across lifetime statistics and single run
 feats: first run, combos, perfect moves, high scores, daily devotion, marathon
 play time and more. Badges unlock live during a run with a golden toast, and
-the gallery shows progress bars for the cumulative ones.
+the gallery shows progress bars for the cumulative ones. Every badge keeps its
+own symbol and colour while still locked — only a small corner lock marks it —
+so the wall reads as a set of medals instead of a list of padlocks, while the
+tier stays visible in the row border and the group header.
 
 ### Game feel (juice) rules applied
 

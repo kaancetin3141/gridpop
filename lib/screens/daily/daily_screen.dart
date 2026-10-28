@@ -1,11 +1,10 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../../audio/audio_manager.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/utils/date_keys.dart';
 import '../../core/utils/responsive.dart';
 import '../../core/utils/score_format.dart';
 import '../../game/models/game_mode.dart';
@@ -23,7 +22,6 @@ class DailyScreen extends StatelessWidget {
     final AppStrings strings = AppStrings.of(context);
     final AppPalette palette = AppPalette.of(context);
     final services = AppScope.of(context);
-
 
     return AppScaffold(
       child: ListenableBuilder(
@@ -47,13 +45,7 @@ class DailyScreen extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
-                Text(
-                  DateKeys.today(),
-                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: palette.textMuted,
-                        letterSpacing: 1.2,
-                      ),
-                ),
+                _DatePill(date: DateTime.now()),
                 const SizedBox(height: AppSpacing.lg),
                 Text(
                   strings.t('daily.title'),
@@ -85,17 +77,26 @@ class DailyScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.xl),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: <Widget>[
-                    _MiniStat(
-                      label: strings.t('daily.yourBest'),
-                      value: best == 0
-                          ? strings.t('daily.noRecord')
-                          : ScoreFormat.number(best),
+                    Expanded(
+                      child: _MiniStat(
+                        icon: Icons.emoji_events_rounded,
+                        accent: AppColors.gold,
+                        label: strings.t('daily.yourBest'),
+                        value: best == 0
+                            ? strings.t('daily.noRecord')
+                            : ScoreFormat.number(best),
+                        muted: best == 0,
+                      ),
                     ),
-                    _MiniStat(
-                      label: strings.t('daily.streak'),
-                      value: '${services.daily.liveStreak}',
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: _MiniStat(
+                        icon: Icons.local_fire_department_rounded,
+                        accent: AppColors.tangerine,
+                        label: strings.t('daily.streak'),
+                        value: '${services.daily.liveStreak}',
+                      ),
                     ),
                   ],
                 ),
@@ -209,7 +210,10 @@ class _StarGoal extends StatelessWidget {
   Widget build(BuildContext context) {
     final AppPalette palette = AppPalette.of(context);
     final bool done = score >= threshold;
-    final Color color = done ? AppColors.starActive : palette.textMuted;
+    final Color star = palette.isDark
+        ? AppColors.starActive
+        : AppColors.deep(AppColors.starActive, lightness: 0.38);
+    final Color color = done ? star : palette.textMuted;
 
     return Column(
       children: <Widget>[
@@ -231,26 +235,82 @@ class _StarGoal extends StatelessWidget {
   }
 }
 
-class _MiniStat extends StatelessWidget {  const _MiniStat({required this.label, required this.value});
+class _MiniStat extends StatelessWidget {
+  const _MiniStat({
+    required this.icon,
+    required this.accent,
+    required this.label,
+    required this.value,
+    this.muted = false,
+  });
 
+  final IconData icon;
+  final Color accent;
   final String label;
   final String value;
+
+  /// Renders the value in the quiet style, used for "no result yet".
+  final bool muted;
 
   @override
   Widget build(BuildContext context) {
     final AppPalette palette = AppPalette.of(context);
-    return Column(
-      children: <Widget>[
-        Text(
-          value,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w800,
-                color: palette.text,
+    final Color ink =
+        palette.isDark ? accent : AppColors.deep(accent, lightness: 0.42);
+
+    // Both tiles share one fixed height so the pair stays level even when one
+    // side shows a sentence instead of a number.
+    return Container(
+      height: 82,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      decoration: BoxDecoration(
+        color: palette.surfaceAlt,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: palette.outline),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Icon(icon, size: 15, color: ink),
+              const SizedBox(width: 5),
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context)
+                      .textTheme
+                      .labelSmall
+                      ?.copyWith(color: palette.textMuted),
+                ),
               ),
-        ),
-        const SizedBox(height: 2),
-        Text(label, style: Theme.of(context).textTheme.labelSmall),
-      ],
+            ],
+          ),
+          const SizedBox(height: 4),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              value,
+              maxLines: 1,
+              style: muted
+                  ? Theme.of(context).textTheme.labelLarge?.copyWith(
+                        color: palette.textMuted,
+                        fontWeight: FontWeight.w700,
+                      )
+                  : Theme.of(context).textTheme.titleLarge?.copyWith(
+                        // Dark mode lets the accent carry the number; on a
+                        // light surface the ink reads cleaner than a tinted
+                        // numeral, so only the icon keeps the colour.
+                        color: palette.isDark ? ink : palette.text,
+                        fontWeight: FontWeight.w900,
+                      ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -286,10 +346,12 @@ class _StreakLadder extends StatelessWidget {
         children: <Widget>[
           Row(
             children: <Widget>[
-              const Icon(
+              Icon(
                 Icons.local_fire_department_rounded,
                 size: 18,
-                color: AppColors.tangerine,
+                color: palette.isDark
+                    ? AppColors.tangerine
+                    : AppColors.deep(AppColors.tangerine, lightness: 0.42),
               ),
               const SizedBox(width: 6),
               Expanded(
@@ -310,7 +372,9 @@ class _StreakLadder extends StatelessWidget {
                 child: Text(
                   '${strings.t('daily.bonus')} +$bonus',
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: AppColors.amber,
+                        color: palette.isDark
+                            ? AppColors.amber
+                            : AppColors.deep(AppColors.amber, lightness: 0.36),
                         fontWeight: FontWeight.w800,
                       ),
                 ),
@@ -362,15 +426,23 @@ class _LadderStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final AppPalette palette = AppPalette.of(context);
-    final Color accent = done
+    // Light mode needs a deeper ink: mint and amber text on a near white
+    // surface is pretty but unreadable.
+    final Color mint = palette.isDark
         ? AppColors.mint
+        : AppColors.deep(AppColors.mint, lightness: 0.36);
+    final Color gold = palette.isDark
+        ? AppColors.amber
+        : AppColors.deep(AppColors.amber, lightness: 0.36);
+    final Color accent = done
+        ? mint
         : isToday
-            ? AppColors.amber
+            ? gold
             : palette.textMuted;
     final Color fill = done
-        ? AppColors.mint.withOpacity(0.16)
+        ? mint.withOpacity(0.14)
         : isToday
-            ? AppColors.amber.withOpacity(0.18)
+            ? gold.withOpacity(0.18)
             : palette.surface;
 
     return Container(
@@ -416,6 +488,50 @@ class _LadderStep extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The day the board belongs to, drawn as a quiet pill instead of a raw
+/// `yyyy-mm-dd` key: "Today · 28 Oct" reads like a calendar, not like a file
+/// name.
+class _DatePill extends StatelessWidget {
+  const _DatePill({required this.date});
+
+  final DateTime date;
+
+  @override
+  Widget build(BuildContext context) {
+    final AppPalette palette = AppPalette.of(context);
+    final AppStrings strings = AppStrings.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: palette.surfaceAlt,
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        border: Border.all(color: palette.outline),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Icon(
+            Icons.event_available_rounded,
+            size: 14,
+            color: palette.isDark
+                ? AppColors.sky
+                : AppColors.deep(AppColors.sky, lightness: 0.4),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            '${strings.t("common.today")} · ${strings.shortDate(date)}',
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: palette.textMuted,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.4,
+                ),
           ),
         ],
       ),
