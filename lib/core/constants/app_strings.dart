@@ -323,6 +323,10 @@ class AppStrings {
     'stats.perfectMoves': 'Perfect moves',
     'stats.cellsPlaced': 'Cells placed',
     'stats.playTime': 'Time played',
+    'stats.averageScore': 'Average score',
+    'stats.localOnly': 'Every number here is stored on this device.',
+    'stats.emptyTitle': 'No runs yet',
+    'stats.emptyHint': 'Play a round and your lifetime numbers land here.',
 
     'score.cells': 'Cells',
     'score.lines': 'Lines',
@@ -618,6 +622,12 @@ class AppStrings {
     'stats.perfectMoves': 'Mükemmel hamle',
     'stats.cellsPlaced': 'Yerleştirilen hücre',
     'stats.playTime': 'Oynanan süre',
+    'stats.averageScore': 'Ortalama skor',
+    'stats.localOnly':
+        'Buradaki her sayı yalnızca bu cihazda saklanır.',
+    'stats.emptyTitle': 'Henüz oyun yok',
+    'stats.emptyHint':
+        'Bir tur oyna, tüm sayıların burada biriksin.',
 
     'score.cells': 'Hücre',
     'score.lines': 'Çizgi',
