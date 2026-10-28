@@ -78,11 +78,15 @@ class SettingsScreen extends StatelessWidget {
                               ),
                               _SwitchTile(
                                 label: strings.t('settings.showGhost'),
+                                icon: Icons.visibility_rounded,
+                                tint: AppColors.grape,
                                 value: settings.showGhost,
                                 onChanged: settings.setShowGhost,
                               ),
                               _SwitchTile(
                                 label: strings.t('settings.showHints'),
+                                icon: Icons.lightbulb_rounded,
+                                tint: AppColors.bubblegum,
                                 value: settings.showHints,
                                 onChanged: settings.setShowHints,
                               ),
@@ -95,6 +99,7 @@ class SettingsScreen extends StatelessWidget {
                               _SwitchTile(
                                 label: strings.t('settings.sound'),
                                 icon: Icons.graphic_eq_rounded,
+                                tint: AppColors.sky,
                                 value: settings.soundEnabled,
                                 onChanged: (bool value) {
                                   settings.setSoundEnabled(value);
@@ -106,19 +111,22 @@ class SettingsScreen extends StatelessWidget {
                               _SwitchTile(
                                 label: strings.t('settings.music'),
                                 icon: Icons.music_note_rounded,
+                                tint: AppColors.violet,
                                 value: settings.musicEnabled,
                                 onChanged: settings.setMusicEnabled,
                               ),
                               _SwitchTile(
                                 label: strings.t('settings.vibration'),
                                 icon: Icons.vibration_rounded,
+                                tint: AppColors.mint,
                                 value: settings.vibrationEnabled,
                                 onChanged: settings.setVibrationEnabled,
                               ),
                             ],
                           ),
                           const SizedBox(height: AppSpacing.xl),
-                          _SectionHeader(label: strings.t('settings.appearance')),
+                          _SectionHeader(
+                              label: strings.t('settings.appearance')),
                           _Group(
                             children: <Widget>[
                               _ThemeSelector(
@@ -250,6 +258,7 @@ class _SwitchTile extends StatelessWidget {
     required this.value,
     required this.onChanged,
     this.icon,
+    this.tint,
   });
 
   final String label;
@@ -257,21 +266,38 @@ class _SwitchTile extends StatelessWidget {
   final ValueChanged<bool> onChanged;
   final IconData? icon;
 
+  /// Hue of the leading tile. Falls back to the theme accent.
+  final Color? tint;
+
   @override
   Widget build(BuildContext context) {
     final AppPalette palette = AppPalette.of(context);
+    final Color raw = tint ?? palette.accent;
+    final Color color =
+        palette.isDark ? raw : AppColors.deep(raw, lightness: 0.42);
+    // The icon belongs next to the label, not under it: a switch row reads
+    // left to right, so the leading tile also matches the other list rows.
     return SwitchListTile.adaptive(
       value: value,
       onChanged: onChanged,
       contentPadding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.lg,
-        vertical: 4,
+        vertical: 2,
       ),
       title: Text(label, style: Theme.of(context).textTheme.titleMedium),
-      subtitle: icon == null
+      secondary: icon == null
           ? null
-          : Icon(icon, size: 18, color: palette.textMuted),
-      secondary: null,
+          : Container(
+              width: 36,
+              height: 36,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.14),
+                borderRadius: BorderRadius.circular(AppRadius.sm),
+                border: Border.all(color: color.withValues(alpha: 0.28)),
+              ),
+              child: Icon(icon, size: 18, color: color),
+            ),
     );
   }
 }
@@ -310,10 +336,7 @@ class _ActionTile extends StatelessWidget {
       ),
       title: Text(
         label,
-        style: Theme.of(context)
-            .textTheme
-            .titleMedium
-            ?.copyWith(color: color),
+        style: Theme.of(context).textTheme.titleMedium?.copyWith(color: color),
       ),
     );
   }
@@ -340,7 +363,8 @@ class _AboutTile extends StatelessWidget {
         children: <Widget>[
           Row(
             children: <Widget>[
-              Icon(Icons.info_outline_rounded, size: 18, color: palette.textMuted),
+              Icon(Icons.info_outline_rounded,
+                  size: 18, color: palette.textMuted),
               const SizedBox(width: 8),
               Text(
                 '${strings.t('settings.version')} $version',
@@ -379,7 +403,8 @@ class _ThemeSelector extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Text(strings.t('settings.theme'), style: Theme.of(context).textTheme.titleMedium),
+          Text(strings.t('settings.theme'),
+              style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: AppSpacing.md),
           Row(
             children: <Widget>[
@@ -533,7 +558,8 @@ class _LanguageSelector extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Text(strings.t('settings.language'), style: Theme.of(context).textTheme.titleMedium),
+          Text(strings.t('settings.language'),
+              style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: AppSpacing.md),
           Row(
             children: <Widget>[
@@ -579,7 +605,9 @@ class _ChoiceChip extends StatelessWidget {
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
         decoration: BoxDecoration(
-          color: selected ? AppColors.indigo.withOpacity(0.12) : palette.surfaceAlt,
+          color: selected
+              ? AppColors.indigo.withOpacity(0.12)
+              : palette.surfaceAlt,
           borderRadius: BorderRadius.circular(AppRadius.md),
           border: Border.all(
             color: selected ? AppColors.indigo : palette.outline,
@@ -653,14 +681,12 @@ class _SegmentedRow<T> extends StatelessWidget {
                         ),
                         child: Text(
                           labelBuilder(value),
-                          style: Theme.of(context)
-                              .textTheme
-                              .labelMedium
-                              ?.copyWith(
-                                color: value == selected
-                                    ? Colors.white
-                                    : palette.textMuted,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.labelMedium?.copyWith(
+                                    color: value == selected
+                                        ? Colors.white
+                                        : palette.textMuted,
+                                  ),
                         ),
                       ),
                     ),
