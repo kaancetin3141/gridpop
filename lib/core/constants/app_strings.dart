@@ -302,6 +302,9 @@ class AppStrings {
     'settings.original': 'Original game, original art, no third party assets.',
 
     'how.title': 'How To Play',
+    'how.subtitle': 'Everything you need, in about a minute.',
+    'how.basics': 'Basics',
+    'how.toolsSection': 'Tools and modes',
     'how.drag': 'Drag a piece from the tray onto the board.',
     'how.snap': 'Pieces snap to the grid. Release to lock them in.',
     'how.clear': 'Fill a whole row or column to clear it.',
@@ -601,6 +604,9 @@ class AppStrings {
     'settings.original': 'Özgün oyun, özgün görseller, üçüncü taraf varlık yok.',
 
     'how.title': 'Nasıl Oynanır',
+    'how.subtitle': 'Bir dakikada öğreneceğin her şey.',
+    'how.basics': 'Temeller',
+    'how.toolsSection': 'Araçlar ve modlar',
     'how.drag': 'Tepeden bir parçayı sürükleyip tahtaya bırak.',
     'how.snap': 'Parçalar ızgaraya tam oturur. Bırakınca yerleşir.',
     'how.clear': 'Bir satırı veya sütunu tamamen doldur, temizlensin.',

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../../core/constants/app_strings.dart';
 import '../../core/theme/app_colors.dart';
@@ -20,17 +20,27 @@ class HowToPlayScreen extends StatelessWidget {
     final AppStrings strings = AppStrings.of(context);
     final AppPalette palette = AppPalette.of(context);
 
-    final List<_Rule> rules = <_Rule>[
-      _Rule(Icons.pan_tool_alt_rounded, strings.t('how.drag'), AppColors.indigo),
+    // Ten rules in one column is a wall; the split gives the eye two short
+    // chapters with a heading each.
+    final List<_Rule> basics = <_Rule>[
+      _Rule(
+          Icons.pan_tool_alt_rounded, strings.t('how.drag'), AppColors.indigo),
       _Rule(Icons.grid_4x4_rounded, strings.t('how.snap'), AppColors.sky),
       _Rule(Icons.auto_delete_rounded, strings.t('how.clear'), AppColors.mint),
-      _Rule(Icons.filter_9_plus_rounded, strings.t('how.multi'), AppColors.amber),
-      _Rule(Icons.local_fire_department_rounded, strings.t('how.combo'), AppColors.coral),
-      _Rule(Icons.rotate_right_rounded, strings.t('how.rotate'), AppColors.magenta),
-      _Rule(Icons.gavel_rounded, strings.t('how.tools'), AppColors.mint),
-      _Rule(Icons.favorite_rounded, strings.t('how.revive'), AppColors.bubblegum),
+      _Rule(
+          Icons.filter_9_plus_rounded, strings.t('how.multi'), AppColors.amber),
+      _Rule(Icons.local_fire_department_rounded, strings.t('how.combo'),
+          AppColors.coral),
+      _Rule(Icons.rotate_right_rounded, strings.t('how.rotate'),
+          AppColors.magenta),
+    ];
+    final List<_Rule> extras = <_Rule>[
+      _Rule(Icons.gavel_rounded, strings.t('how.tools'), AppColors.tangerine),
+      _Rule(
+          Icons.favorite_rounded, strings.t('how.revive'), AppColors.bubblegum),
       _Rule(Icons.block_rounded, strings.t('how.over'), AppColors.violet),
-      _Rule(Icons.self_improvement_rounded, strings.t('how.zen'), AppColors.grape),
+      _Rule(Icons.self_improvement_rounded, strings.t('how.zen'),
+          AppColors.grape),
     ];
 
     return AppScaffold(
@@ -46,9 +56,21 @@ class HowToPlayScreen extends StatelessWidget {
                 ),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
-                  child: Text(
-                    strings.t('how.title'),
-                    style: Theme.of(context).textTheme.titleLarge,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        strings.t('how.title'),
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      Text(
+                        strings.t('how.subtitle'),
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodySmall
+                            ?.copyWith(color: palette.textMuted),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -68,36 +90,16 @@ class HowToPlayScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: <Widget>[
-                      _Card(
-                        children: <Widget>[
-                          for (int i = 0; i < rules.length; i++)
-                            Padding(
-                              padding: EdgeInsets.only(
-                                top: i == 0 ? 0 : AppSpacing.md,
-                              ),
-                              child: _RuleTile(rule: rules[i]),
-                            ),
-                        ],
-                      ),
+                      const _SectionHeader(keyName: 'how.basics'),
+                      _Card(rules: basics),
                       const SizedBox(height: AppSpacing.xl),
-                      Text(
-                        strings.t('how.scoring').toUpperCase(),
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                              color: palette.textMuted,
-                              letterSpacing: 1.2,
-                            ),
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      _ScoringTable(),
+                      const _SectionHeader(keyName: 'how.toolsSection'),
+                      _Card(rules: extras),
                       const SizedBox(height: AppSpacing.xl),
-                      Text(
-                        strings.t('how.shapes').toUpperCase(),
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                              color: palette.textMuted,
-                              letterSpacing: 1.2,
-                            ),
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
+                      const _SectionHeader(keyName: 'how.scoring'),
+                      const _ScoringTable(),
+                      const SizedBox(height: AppSpacing.xl),
+                      const _SectionHeader(keyName: 'how.shapes'),
                       const _ShapeGallery(),
                     ],
                   ),
@@ -127,6 +129,9 @@ class _RuleTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final AppPalette palette = AppPalette.of(context);
+    final Color ink = palette.isDark
+        ? rule.color
+        : AppColors.deep(rule.color, lightness: 0.4);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
@@ -135,10 +140,11 @@ class _RuleTile extends StatelessWidget {
           height: 34,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: rule.color.withOpacity(0.14),
+            color: ink.withValues(alpha: 0.14),
             borderRadius: BorderRadius.circular(AppRadius.sm),
+            border: Border.all(color: ink.withValues(alpha: 0.24)),
           ),
-          child: Icon(rule.icon, size: 18, color: rule.color),
+          child: Icon(rule.icon, size: 18, color: ink),
         ),
         const SizedBox(width: AppSpacing.md),
         Expanded(
@@ -155,10 +161,32 @@ class _RuleTile extends StatelessWidget {
   }
 }
 
-class _Card extends StatelessWidget {
-  const _Card({required this.children});
+/// Section label above a block, matching the settings and statistics screens.
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.keyName});
 
-  final List<Widget> children;
+  final String keyName;
+
+  @override
+  Widget build(BuildContext context) {
+    final AppPalette palette = AppPalette.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(left: 6, bottom: AppSpacing.sm),
+      child: Text(
+        AppStrings.of(context).t(keyName).toUpperCase(),
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: palette.textMuted,
+              letterSpacing: 1.2,
+            ),
+      ),
+    );
+  }
+}
+
+class _Card extends StatelessWidget {
+  const _Card({required this.rules});
+
+  final List<_Rule> rules;
 
   @override
   Widget build(BuildContext context) {
@@ -172,13 +200,24 @@ class _Card extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: children,
+        children: <Widget>[
+          for (int i = 0; i < rules.length; i++) ...<Widget>[
+            if (i > 0)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                child: Container(height: 1, color: palette.outline),
+              ),
+            _RuleTile(rule: rules[i]),
+          ],
+        ],
       ),
     );
   }
 }
 
 class _ScoringTable extends StatelessWidget {
+  const _ScoringTable();
+
   @override
   Widget build(BuildContext context) {
     final AppPalette palette = AppPalette.of(context);
@@ -197,7 +236,12 @@ class _ScoringTable extends StatelessWidget {
       ),
       child: Column(
         children: <Widget>[
-          for (final List<String> row in rows)
+          for (int i = 0; i < rows.length; i++) ...<Widget>[
+            if (i > 0)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                child: Container(height: 1, color: palette.outline),
+              ),
             Padding(
               padding: const EdgeInsets.symmetric(
                 horizontal: AppSpacing.lg,
@@ -206,20 +250,24 @@ class _ScoringTable extends StatelessWidget {
               child: Row(
                 children: <Widget>[
                   Text(
-                    AppStrings.of(context).t(row[0]),
+                    AppStrings.of(context).t(rows[i][0]),
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                   const Spacer(),
                   Text(
-                    row[1],
+                    rows[i][1],
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: AppColors.amber,
+                          color: palette.isDark
+                              ? AppColors.amber
+                              : AppColors.deep(AppColors.amber,
+                                  lightness: 0.36),
                           fontWeight: FontWeight.w800,
                         ),
                   ),
                 ],
               ),
             ),
+          ],
         ],
       ),
     );
