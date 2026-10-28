@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -52,9 +52,9 @@ class GameScreen extends StatefulWidget {
   State<GameScreen> createState() => _GameScreenState();
 }
 
-class _GameScreenState extends State<GameScreen>
-    with TickerProviderStateMixin {
-  final GlobalKey<GameBoardViewState> _boardKey = GlobalKey<GameBoardViewState>();
+class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
+  final GlobalKey<GameBoardViewState> _boardKey =
+      GlobalKey<GameBoardViewState>();
 
   GameController? _controllerOrNull;
   GameEffects? _effectsOrNull;
@@ -264,8 +264,7 @@ class _GameScreenState extends State<GameScreen>
           setState(() => _aimItem = null);
         }
       case GameEventType.coinsEarned:
-        final int amount =
-            event.payload is int ? event.payload! as int : 0;
+        final int amount = event.payload is int ? event.payload! as int : 0;
         if (amount > 0) {
           _notifyPlayer(
             '+$amount ${AppStrings.of(context).t('shop.coinsName')}',
@@ -304,11 +303,11 @@ class _GameScreenState extends State<GameScreen>
       );
   }
 
-void _hapticWarning() {
+  void _hapticWarning() {
     _controller.playWarningCue();
   }
 
-Future<void> _showGameOver(GameEndSummary summary) async {
+  Future<void> _showGameOver(GameEndSummary summary) async {
     if (_gameOverShown) {
       return;
     }
@@ -346,7 +345,12 @@ Future<void> _showGameOver(GameEndSummary summary) async {
     _controller.pause();
     AppScope.of(context).audio.play(GameSound.buttonClick);
 
-    final PauseAction? action = await showPauseDialog(context);
+    final PauseAction? action = await showPauseDialog(
+      context,
+      score: _controller.score,
+      seconds: _controller.elapsedSeconds,
+      combo: _controller.bestCombo,
+    );
     if (!mounted) {
       return;
     }
@@ -567,7 +571,8 @@ Future<void> _showGameOver(GameEndSummary summary) async {
   // --- build --------------------------------------------------------------
 
   @override
-  Widget build(BuildContext context) {    final AppPalette palette = AppPalette.of(context);
+  Widget build(BuildContext context) {
+    final AppPalette palette = AppPalette.of(context);
     final Size screen = MediaQuery.sizeOf(context);
     final bool shortScreen = screen.height < Breakpoints.shortHeight;
 

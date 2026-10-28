@@ -272,7 +272,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('One more chance?'), findsOneWidget);
-    await tester.tap(find.textContaining('Revive - '));
+    await tester.tap(find.textContaining('Revive \u00b7 '));
     await tester.pumpAndSettle();
 
     expect(controller.phase.name, 'playing',
@@ -283,6 +283,57 @@ void main() {
         reason: 'the fresh tray must fit');
     expect(services.wallet.coins, 350);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('the pause sheet recaps the run and holds it',
+      (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(420, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    final AppServices services = buildServices();
+    final GameController controller = GameController(
+      stats: services.stats,
+      leaderboard: services.leaderboard,
+      daily: services.daily,
+      audio: services.audio,
+      haptics: services.haptics,
+      wallet: services.wallet,
+    );
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      wrapWithApp(
+        services,
+        GameScreen(mode: GameMode.classic, controller: controller),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await controller.start(mode: GameMode.classic, random: seedForPocket());
+    await tester.pump(const Duration(milliseconds: 60));
+
+    await tester.tap(find.byTooltip('Pause'));
+    await tester.pumpAndSettle();
+
+    expect(controller.phase.name, 'paused',
+        reason: 'the sheet must hold the run');
+    expect(find.text('Paused'), findsOneWidget);
+    // The sheet repeats the three numbers that tell a player where they are.
+    // The HUD shows a score too, so the labels are matched inside the dialog.
+    Finder inSheet(String text) => find.descendant(
+          of: find.byType(Dialog),
+          matching: find.text(text),
+        );
+    expect(inSheet('Score'), findsOneWidget);
+    expect(inSheet('Time'), findsOneWidget);
+    expect(inSheet('Combo'), findsOneWidget);
+    expect(inSheet('x${controller.bestCombo}'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+
+    await tester.tap(find.text('Resume'));
+    await tester.pumpAndSettle();
+    expect(controller.phase.name, 'playing',
+        reason: 'resume must hand control back');
   });
 
   testWidgets('dragging a tray piece onto the board places it',

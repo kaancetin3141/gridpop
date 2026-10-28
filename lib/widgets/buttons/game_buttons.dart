@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
@@ -28,6 +28,45 @@ class PrimaryButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool enabled = onPressed != null;
+    final AppPalette palette = AppPalette.of(context);
+    if (!enabled) {
+      // Half-transparent gradient reads as "tap me but dimmer"; a muted pill
+      // with muted ink is unmistakably out of reach, and it stays legible on a
+      // white sheet where white-on-washed-purple does not.
+      return Container(
+        height: height,
+        width: expand ? (width ?? double.infinity) : width,
+        alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+        decoration: BoxDecoration(
+          color: palette.surfaceAlt,
+          borderRadius: BorderRadius.circular(height / 2),
+          border: Border.all(color: palette.outline, width: 1.2),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            if (icon != null) ...<Widget>[
+              Icon(icon, color: palette.textMuted, size: height * 0.42),
+              const SizedBox(width: AppSpacing.md),
+            ],
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      color: palette.textMuted,
+                      fontWeight: FontWeight.w800,
+                    ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     final Gradient gradient = LinearGradient(
       colors: colors ?? AppColors.auroraGradient,
       begin: Alignment.centerLeft,
@@ -42,15 +81,13 @@ class PrimaryButton extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: gradient,
         borderRadius: BorderRadius.circular(height / 2),
-        boxShadow: enabled
-            ? <BoxShadow>[
-                BoxShadow(
-                  color: (colors?.first ?? AppColors.indigo).withOpacity(0.36),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                ),
-              ]
-            : null,
+        boxShadow: <BoxShadow>[
+          BoxShadow(
+            color: (colors?.first ?? AppColors.indigo).withOpacity(0.36),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -75,9 +112,6 @@ class PrimaryButton extends StatelessWidget {
       ),
     );
 
-    if (!enabled) {
-      return Opacity(opacity: 0.5, child: content);
-    }
     return Pressable(onTap: onPressed, child: content);
   }
 }
@@ -183,7 +217,8 @@ class IconPillButton extends StatelessWidget {
         color: palette.surface,
         shape: BoxShape.circle,
         border: Border.all(color: palette.outline, width: 1.4),
-        boxShadow: AppShadows.soft(palette.isDark ? Colors.black : AppColors.indigo),
+        boxShadow:
+            AppShadows.soft(palette.isDark ? Colors.black : AppColors.indigo),
       ),
       child: Icon(icon, color: accent, size: size * 0.46),
     );

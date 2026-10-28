@@ -74,7 +74,9 @@ class _ReviveDialog extends StatelessWidget {
                 child: Text(
                   strings.t('revive.title'),
                   textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.headlineSmall,
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
                 ),
               ),
               const SizedBox(height: AppSpacing.sm),
@@ -91,12 +93,37 @@ class _ReviveDialog extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.xl),
               PrimaryButton(
-                label: '${strings.t('revive.coins')} - $cost',
+                // A middot instead of a dash: the dash read like a minus, so
+                // "Revive - 120" looked like a discount.
+                label: '${strings.t('revive.coins')} · $cost',
                 icon: Icons.monetization_on_rounded,
                 onPressed: canAfford
                     ? () => Navigator.of(context).pop(ReviveChoice.coins)
                     : null,
               ),
+              if (!canAfford) ...<Widget>[
+                const SizedBox(height: AppSpacing.sm),
+                // Say why the big button is dimmed, instead of leaving the
+                // player to guess.
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Icon(
+                      Icons.info_outline_rounded,
+                      size: 14,
+                      color: palette.textMuted,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      strings.t('shop.notEnough'),
+                      style: Theme.of(context)
+                          .textTheme
+                          .labelMedium
+                          ?.copyWith(color: palette.textMuted),
+                    ),
+                  ],
+                ),
+              ],
               if (adAvailable) ...<Widget>[
                 const SizedBox(height: AppSpacing.md),
                 SoftButton(
@@ -110,10 +137,14 @@ class _ReviveDialog extends StatelessWidget {
                 onPressed: () => Navigator.of(context).pop(ReviveChoice.giveUp),
                 child: Text(
                   strings.t('revive.giveUp'),
-                  style: Theme.of(context)
-                      .textTheme
-                      .labelLarge
-                      ?.copyWith(color: AppColors.coral),
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        // Coral on a white sheet is too pale to read; deepen
+                        // it instead of swapping the hue.
+                        color: palette.isDark
+                            ? AppColors.coral
+                            : AppColors.deep(AppColors.coral, lightness: 0.4),
+                        fontWeight: FontWeight.w700,
+                      ),
                 ),
               ),
             ],

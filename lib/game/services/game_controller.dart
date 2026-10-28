@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
@@ -110,6 +110,9 @@ class GameController extends ChangeNotifier {
   GamePhase get phase => _state.phase;
 
   int get score => _state.score;
+
+  /// Seconds played in the current run, frozen while paused.
+  int get elapsedSeconds => _elapsedSeconds;
 
   /// True while the previous piece is still settling. The tray keeps the used
   /// piece visible (greyed out) until this is false again.
@@ -372,7 +375,9 @@ class GameController extends ChangeNotifier {
   /// run is not accepting input.
   bool rotateSlot(int index) {
     final PieceSlot? slot = slotAt(index);
-    if (slot == null || !_state.acceptsInput || slot.shape.uniqueRotations <= 1) {
+    if (slot == null ||
+        !_state.acceptsInput ||
+        slot.shape.uniqueRotations <= 1) {
       return false;
     }
     final List<PieceSlot?> tray = List<PieceSlot?>.of(_state.tray);
@@ -632,7 +637,8 @@ class GameController extends ChangeNotifier {
     if (_state.phase != GamePhase.playing) {
       return false;
     }
-    final List<(int row, int col, int colorIndex)> filled = _board.filledCells();
+    final List<(int row, int col, int colorIndex)> filled =
+        _board.filledCells();
     if (filled.isEmpty) {
       return false;
     }
@@ -764,7 +770,8 @@ class GameController extends ChangeNotifier {
     if (_state.phase != GamePhase.paused) {
       return;
     }
-    _startedAt = DateTime.now().subtract(Duration(seconds: _elapsedBeforePause));
+    _startedAt =
+        DateTime.now().subtract(Duration(seconds: _elapsedBeforePause));
     _state = _state.copyWith(phase: GamePhase.playing);
     if (_state.mode.config.isTimed) {
       _startTimer();
@@ -789,7 +796,9 @@ class GameController extends ChangeNotifier {
     await start(
       mode: mode,
       boardSize: mode == GameMode.classic ? size : null,
-      random: mode == GameMode.daily ? null : SeededRandom(DateTime.now().microsecondsSinceEpoch),
+      random: mode == GameMode.daily
+          ? null
+          : SeededRandom(DateTime.now().microsecondsSinceEpoch),
     );
   }
 
@@ -946,7 +955,8 @@ class GameController extends ChangeNotifier {
     if (_startedAt == null) {
       return _elapsedBeforePause;
     }
-    return _elapsedBeforePause + DateTime.now().difference(_startedAt!).inSeconds;
+    return _elapsedBeforePause +
+        DateTime.now().difference(_startedAt!).inSeconds;
   }
 
   void _startTimer() {
