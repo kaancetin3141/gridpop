@@ -28,7 +28,6 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final AppStrings strings = AppStrings.of(context);
-    final AppPalette palette = AppPalette.of(context);
     final services = AppScope.of(context);
     final ScreenClass screenClass = Responsive.of(context);
 
@@ -45,12 +44,12 @@ class HomeScreen extends StatelessWidget {
           final int games = services.stats.gamesPlayed;
           final bool dailyDone = services.daily.isCompletedToday;
 
-  final Widget header = _Header(
-    best: best,
-    games: games,
-    streak: services.daily.liveStreak,
-    coins: services.wallet.coins,
-  );
+          final Widget header = _Header(
+            best: best,
+            games: games,
+            streak: services.daily.liveStreak,
+            coins: services.wallet.coins,
+          );
 
           final Widget actions = Column(
             children: <Widget>[
@@ -83,7 +82,7 @@ class HomeScreen extends StatelessWidget {
               MenuTile(
                 icon: Icons.grid_view_rounded,
                 label: strings.t('home.modes'),
-                subtitle: strings.t('modes.classicDesc'),
+                subtitle: strings.t('home.modesHint'),
                 tint: AppColors.sky,
                 onTap: () {
                   services.audio.play(GameSound.buttonClick);
@@ -93,12 +92,14 @@ class HomeScreen extends StatelessWidget {
               MenuTile(
                 icon: Icons.emoji_events_rounded,
                 label: strings.t('home.leaderboard'),
+                subtitle: strings.t('home.leaderboardHint'),
                 tint: AppColors.amber,
                 onTap: () {
                   services.audio.play(GameSound.buttonClick);
                   Navigator.of(context).push(
                     MaterialPageRoute<void>(
-                      builder: (BuildContext context) => const LeaderboardScreen(),
+                      builder: (BuildContext context) =>
+                          const LeaderboardScreen(),
                     ),
                   );
                 },
@@ -136,6 +137,7 @@ class HomeScreen extends StatelessWidget {
               MenuTile(
                 icon: Icons.insights_rounded,
                 label: strings.t('home.stats'),
+                subtitle: strings.t('home.statsHint'),
                 tint: AppColors.mint,
                 onTap: () {
                   services.audio.play(GameSound.buttonClick);
@@ -149,12 +151,14 @@ class HomeScreen extends StatelessWidget {
               MenuTile(
                 icon: Icons.school_rounded,
                 label: strings.t('home.howToPlay'),
+                subtitle: strings.t('home.howToPlayHint'),
                 tint: AppColors.bubblegum,
                 onTap: () {
                   services.audio.play(GameSound.buttonClick);
                   Navigator.of(context).push(
                     MaterialPageRoute<void>(
-                      builder: (BuildContext context) => const HowToPlayScreen(),
+                      builder: (BuildContext context) =>
+                          const HowToPlayScreen(),
                     ),
                   );
                 },
@@ -162,6 +166,7 @@ class HomeScreen extends StatelessWidget {
               MenuTile(
                 icon: Icons.settings_rounded,
                 label: strings.t('home.settings'),
+                subtitle: strings.t('home.settingsHint'),
                 tint: AppColors.violet,
                 onTap: () {
                   services.audio.play(GameSound.buttonClick);
@@ -205,15 +210,6 @@ class HomeScreen extends StatelessWidget {
                 header,
                 const SizedBox(height: 24),
                 actions,
-                const SizedBox(height: 18),
-                Text(
-                  strings.t('app.tagline'),
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodySmall
-                      ?.copyWith(color: palette.textMuted),
-                ),
               ],
             ),
           );
@@ -287,12 +283,18 @@ class _Header extends StatelessWidget {
         const SizedBox(height: 14),
         PopIn(
           delay: const Duration(milliseconds: 60),
+          child: _Wordmark(text: strings.t('app.name')),
+        ),
+        const SizedBox(height: 6),
+        PopIn(
+          delay: const Duration(milliseconds: 90),
           child: Text(
-            strings.t('app.name'),
-            style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                  letterSpacing: 1.2,
-                  color: palette.text,
-                ),
+            strings.t('app.tagline'),
+            textAlign: TextAlign.center,
+            style: Theme.of(context)
+                .textTheme
+                .bodySmall
+                ?.copyWith(color: palette.textMuted),
           ),
         ),
         const SizedBox(height: 18),
@@ -328,6 +330,47 @@ class _Header extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// The game name, filled with a warm gradient instead of flat paint.
+class _Wordmark extends StatelessWidget {
+  const _Wordmark({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final AppPalette palette = AppPalette.of(context);
+    // Light mode uses the deepened hues so the gradient keeps its contrast
+    // against the pale stage.
+    final List<Color> colors = palette.isDark
+        ? const <Color>[
+            Color(0xFFB79BFF),
+            Color(0xFFFF8FD1),
+            Color(0xFFFFD34E),
+          ]
+        : <Color>[
+            AppColors.deep(AppColors.violet, lightness: 0.42),
+            AppColors.deep(AppColors.magenta, lightness: 0.42),
+            AppColors.deep(AppColors.amber, lightness: 0.36),
+          ];
+    return ShaderMask(
+      blendMode: BlendMode.srcIn,
+      shaderCallback: (Rect bounds) => LinearGradient(
+        colors: colors,
+        begin: Alignment.centerLeft,
+        end: Alignment.centerRight,
+      ).createShader(bounds),
+      child: Text(
+        text,
+        textAlign: TextAlign.center,
+        style: Theme.of(context).textTheme.displaySmall?.copyWith(
+              letterSpacing: 1.2,
+              color: Colors.white,
+            ),
+      ),
     );
   }
 }
@@ -608,7 +651,8 @@ class _ModeSheet extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
-            Text(strings.t('modes.title'), style: Theme.of(context).textTheme.headlineSmall),
+            Text(strings.t('modes.title'),
+                style: Theme.of(context).textTheme.headlineSmall),
             const SizedBox(height: AppSpacing.lg),
             for (final GameMode mode in GameMode.values)
               Padding(

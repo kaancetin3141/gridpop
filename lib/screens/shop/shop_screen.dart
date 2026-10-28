@@ -66,12 +66,10 @@ class ShopScreen extends StatelessWidget {
                         children: <Widget>[
                           Text(
                             strings.t('shop.subtitle'),
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall
-                                ?.copyWith(
-                                  color: AppPalette.of(context).textMuted,
-                                ),
+                            style:
+                                Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: AppPalette.of(context).textMuted,
+                                    ),
                           ),
                           const SizedBox(height: AppSpacing.lg),
                           for (final ShopItem item in ShopCatalog.all)
@@ -81,8 +79,8 @@ class ShopScreen extends StatelessWidget {
                               child: _ShopCard(
                                 item: item,
                                 owned: services.inventory.countOf(item.id),
-                                affordable: services.wallet
-                                    .canAfford(item.price),
+                                affordable:
+                                    services.wallet.canAfford(item.price),
                                 onBuy: () => _buy(context, services, item),
                               ),
                             ),
@@ -162,7 +160,6 @@ class _ShopCard extends StatelessWidget {
     final Color accent = PowerBar.tints[item.id] ?? AppColors.indigo;
 
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: palette.surface,
         borderRadius: BorderRadius.circular(AppRadius.lg),
@@ -172,126 +169,183 @@ class _ShopCard extends StatelessWidget {
           strength: 0.6,
         ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+      child: Stack(
         children: <Widget>[
-          Row(
-            children: <Widget>[
-              Container(
-                width: 46,
-                height: 46,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: <Color>[
-                      accent.withOpacity(0.9),
-                      Color.lerp(accent, Colors.white, 0.25)!,
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(AppRadius.md),
-                ),
-                child: Icon(
-                  PowerBar.icons[item.id],
-                  color: Colors.white,
-                  size: 24,
-                ),
+          // A thin strip in the power-up colour, so each card has its own
+          // identity without repainting the whole surface.
+          Positioned(
+            left: 6,
+            top: 18,
+            bottom: 18,
+            child: Container(
+              width: 4,
+              decoration: BoxDecoration(
+                color: accent.withOpacity(0.55),
+                borderRadius: BorderRadius.circular(2),
               ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      strings.t(item.nameKey),
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      strings.t(item.descriptionKey),
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ],
-                ),
-              ),
-            ],
+            ),
           ),
-          const SizedBox(height: AppSpacing.md),
-          Row(
-            children: <Widget>[
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 7,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.gold.withOpacity(0.14),
-                  borderRadius: BorderRadius.circular(AppRadius.pill),
-                  border: Border.all(
-                    color: AppColors.gold.withOpacity(0.4),
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
+          Padding(
+            padding: const EdgeInsets.fromLTRB(18, 16, 16, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                Row(
                   children: <Widget>[
-                    const Icon(
-                      Icons.paid_rounded,
-                      size: 16,
-                      color: AppColors.amber,
+                    Container(
+                      width: 46,
+                      height: 46,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: <Color>[
+                            accent.withOpacity(0.9),
+                            Color.lerp(accent, Colors.white, 0.25)!,
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                      ),
+                      child: Icon(
+                        PowerBar.icons[item.id],
+                        color: Colors.white,
+                        size: 24,
+                      ),
                     ),
-                    const SizedBox(width: 5),
-                    Text(
-                      '${item.price}',
-                      style:
-                          Theme.of(context).textTheme.labelLarge?.copyWith(
-                                fontWeight: FontWeight.w900,
-                                color: AppColors.amber,
-                              ),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                            strings.t(item.nameKey),
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            strings.t(item.descriptionKey),
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(width: 10),
-              Text(
-                '${strings.t('shop.owned')}: $owned',
-                style: Theme.of(context)
-                    .textTheme
-                    .labelMedium
-                    ?.copyWith(color: palette.textMuted),
-              ),
-              const Spacer(),
-              Pressable(
-                onTap: onBuy,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: affordable
-                          ? const <Color>[AppColors.indigo, AppColors.violet]
-                          : <Color>[
-                              palette.surfaceAlt,
-                              palette.surfaceAlt,
-                            ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(AppRadius.pill),
-                  ),
-                  child: Text(
-                    strings.t('shop.buy'),
-                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                          color:
-                              affordable ? Colors.white : palette.textMuted,
-                          fontWeight: FontWeight.w800,
+                const SizedBox(height: AppSpacing.md),
+                Row(
+                  children: <Widget>[
+                    if (owned > 0)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
                         ),
-                  ),
+                        decoration: BoxDecoration(
+                          color: palette.surfaceAlt,
+                          borderRadius: BorderRadius.circular(AppRadius.pill),
+                          border: Border.all(color: palette.outline),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: <Widget>[
+                            Icon(
+                              Icons.inventory_2_rounded,
+                              size: 13,
+                              color: palette.textMuted,
+                            ),
+                            const SizedBox(width: 5),
+                            Text(
+                              'x$owned',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .labelMedium
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w800,
+                                    color: palette.textMuted,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    const Spacer(),
+                    // One button that says both what it does and what it costs;
+                    // the separate price pill only repeated the same number.
+                    Pressable(
+                      onTap: onBuy,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: affordable
+                                ? const <Color>[
+                                    AppColors.indigo,
+                                    AppColors.violet
+                                  ]
+                                : <Color>[
+                                    palette.surfaceAlt,
+                                    palette.surfaceAlt,
+                                  ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(AppRadius.pill),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: <Widget>[
+                            Icon(
+                              Icons.paid_rounded,
+                              size: 15,
+                              color: affordable
+                                  ? AppColors.gold
+                                  : palette.textMuted,
+                            ),
+                            const SizedBox(width: 5),
+                            Text(
+                              '${item.price}',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .labelLarge
+                                  ?.copyWith(
+                                    color: affordable
+                                        ? Colors.white
+                                        : palette.textMuted,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                            ),
+                            const SizedBox(width: 8),
+                            Container(
+                              width: 1,
+                              height: 14,
+                              color: affordable
+                                  ? Colors.white.withOpacity(0.35)
+                                  : palette.outline,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              strings.t('shop.buy'),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .labelLarge
+                                  ?.copyWith(
+                                    color: affordable
+                                        ? Colors.white
+                                        : palette.textMuted,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),

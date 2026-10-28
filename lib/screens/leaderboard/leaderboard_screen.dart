@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../../core/constants/app_strings.dart';
 import '../../core/theme/app_colors.dart';
@@ -100,7 +100,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                               child: _RecordTile(
                                 rank: index + 1,
                                 record: records[index],
-                                today: records[index].dateKey == DateKeys.key(now),
+                                today:
+                                    records[index].dateKey == DateKeys.key(now),
                               ),
                             ),
                           );
@@ -197,30 +198,60 @@ class _RecordTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final AppPalette palette = AppPalette.of(context);
+    final AppStrings strings = AppStrings.of(context);
     final bool top = rank <= 3;
-    final Color tone = top ? AppColors.amber : palette.text;
+    // Podium colours: gold, silver then bronze, so the top three read at a
+    // glance instead of needing the ordinal text.
+    final Color rawMedal = switch (rank) {
+      1 => AppColors.gold,
+      2 => const Color(0xFFB8C2D6),
+      3 => const Color(0xFFCD7F32),
+      _ => palette.textMuted,
+    };
+    final Color medal =
+        palette.isDark ? rawMedal : AppColors.deep(rawMedal, lightness: 0.42);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: top ? tone.withOpacity(0.10) : palette.surface,
+        color: top
+            ? medal.withOpacity(palette.isDark ? 0.10 : 0.07)
+            : palette.surface,
         borderRadius: BorderRadius.circular(AppRadius.md),
         border: Border.all(
-          color: top ? tone.withOpacity(0.35) : palette.outline,
+          color: top ? medal.withOpacity(0.32) : palette.outline,
         ),
       ),
       child: Row(
         children: <Widget>[
           SizedBox(
-            width: 34,
-            child: Text(
-              ScoreFormat.ordinal(rank),
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: tone,
-                    fontWeight: FontWeight.w800,
+            width: 36,
+            child: top
+                ? Container(
+                    width: 26,
+                    height: 26,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: medal,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Text(
+                      '$rank',
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                            color: palette.isDark ? Colors.black : Colors.white,
+                            fontWeight: FontWeight.w900,
+                          ),
+                    ),
+                  )
+                : Text(
+                    '$rank',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                          color: palette.textMuted,
+                          fontWeight: FontWeight.w700,
+                        ),
                   ),
-            ),
           ),
           Expanded(
             child: Column(
@@ -235,8 +266,8 @@ class _RecordTile extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${DateKeys.shortLabel(record.timestamp)}  â€¢  '
-                  '${record.clearedLines} lines  â€¢  x${record.combo}',
+                  '${strings.shortDate(record.timestamp)}  •  '
+                  '${record.clearedLines} ${strings.t('leaderboard.linesShort')}  •  x${record.combo}',
                   style: Theme.of(context)
                       .textTheme
                       .labelSmall
@@ -253,11 +284,13 @@ class _RecordTile extends StatelessWidget {
                 borderRadius: BorderRadius.circular(AppRadius.pill),
               ),
               child: Text(
-                'new',
-                style: Theme.of(context)
-                    .textTheme
-                    .labelSmall
-                    ?.copyWith(color: AppColors.mint),
+                strings.t('leaderboard.newRun'),
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: palette.isDark
+                          ? AppColors.mint
+                          : AppColors.deep(AppColors.mint, lightness: 0.34),
+                      fontWeight: FontWeight.w800,
+                    ),
               ),
             ),
         ],
@@ -274,27 +307,60 @@ class _EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final AppPalette palette = AppPalette.of(context);
+    final AppStrings strings = AppStrings.of(context);
+    final Color accent =
+        palette.isDark ? AppColors.gold : AppColors.deep(AppColors.gold);
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(40),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Icon(
-              Icons.emoji_events_outlined,
-              size: 56,
-              color: palette.textMuted.withOpacity(0.6),
+        padding: const EdgeInsets.all(32),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 340),
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(24, 28, 24, 26),
+            decoration: BoxDecoration(
+              color: palette.surface,
+              borderRadius: BorderRadius.circular(AppRadius.xl),
+              border: Border.all(color: palette.outline),
             ),
-            const SizedBox(height: AppSpacing.lg),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.copyWith(color: palette.textMuted),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Container(
+                  width: 64,
+                  height: 64,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: accent.withValues(alpha: 0.16),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: accent.withValues(alpha: 0.3)),
+                  ),
+                  child: Icon(
+                    Icons.emoji_events_rounded,
+                    size: 32,
+                    color: accent,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleMedium
+                      ?.copyWith(fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  strings.t('leaderboard.emptyHint'),
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodySmall
+                      ?.copyWith(color: palette.textMuted),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

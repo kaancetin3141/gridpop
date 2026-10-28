@@ -93,6 +93,11 @@ class AppStrings {
     'common.off': 'Off',
 
     'home.best': 'Best',
+    'home.modesHint': 'Classic, time attack, zen and daily.',
+    'home.leaderboardHint': 'Your best runs, mode by mode.',
+    'home.statsHint': 'Everything you have played, counted.',
+    'home.howToPlayHint': 'Rules, combos and the star goals.',
+    'home.settingsHint': 'Sound, haptics, language and style.',
     'home.games': 'Games',
     'home.play': 'Play',
     'home.daily': 'Daily Challenge',
@@ -158,6 +163,10 @@ class AppStrings {
     'leaderboard.score': 'Score',
     'leaderboard.date': 'Date',
     'leaderboard.cleared': 'Records cleared',
+    'leaderboard.emptyHint':
+        'Finish a run and your best scores land here.',
+    'leaderboard.newRun': 'New',
+    'leaderboard.linesShort': 'lines',
 
     'shop.title': 'Shop',
     'shop.subtitle': 'Power-ups for your next runs',
@@ -379,6 +388,11 @@ class AppStrings {
     'common.off': 'Kapalı',
 
     'home.best': 'Rekor',
+    'home.modesHint': 'Klasik, zaman atlama, zen ve günlük.',
+    'home.leaderboardHint': 'Her modda en iyi koşuların.',
+    'home.statsHint': 'Oynadığın her şeyin sayımı.',
+    'home.howToPlayHint': 'Kurallar, kombolar ve yıldız hedefleri.',
+    'home.settingsHint': 'Ses, titreşim, dil ve stil.',
     'home.games': 'Oyun',
     'home.play': 'Oyna',
     'home.daily': 'Günlük Görev',
@@ -444,6 +458,10 @@ class AppStrings {
     'leaderboard.score': 'Skor',
     'leaderboard.date': 'Tarih',
     'leaderboard.cleared': 'Rekorlar silindi',
+    'leaderboard.emptyHint':
+        'Bir oyun bitir, en iyi skorların burada listelensin.',
+    'leaderboard.newRun': 'Yeni',
+    'leaderboard.linesShort': 'çizgi',
 
     'shop.title': 'Mağaza',
     'shop.subtitle': 'Sonraki oyunların için güçlendiriciler',
