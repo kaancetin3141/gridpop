@@ -1,0 +1,8 @@
+{
+  "name": "gridpop",
+  "private": true,
+  "scripts": {
+    "dev": "bun --hot server.ts",
+    "start": "bun server.ts"
+  }
+}
